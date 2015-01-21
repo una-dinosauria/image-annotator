@@ -6,12 +6,18 @@ var play                // this is set to stop the playing when paused or stoppe
 var current_image = 1;  // the image we are looking at.
 $('#pause_bttn').hide() // since we are not playing initially
 
+//preload images
+var annotate_images={};
+for (i=0;i<NIMAGES;i++){
+    annotate_images[i] = new Image();
+    var fname = sprintf('imgs/cam1logfile1_%05d.jpeg', [current_image]); // Name of the image file.
+    annotate_images[i].src = fname
+}
 
 //updates the frame details.
 function update_image(){
     var fname = sprintf('imgs/cam1logfile1_%05d.jpeg', [current_image]); // Name of the image file.
     $('#to_annotate').attr('src', fname); // Actually load the image.
-    $(window).load(function(){});
     var new_text = sprintf('You are currently on frame %d / %d', current_image, NIMAGES);
     $('#info-text').text( new_text ); // Update the text at the top
 } 
