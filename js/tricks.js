@@ -11,6 +11,7 @@ $('#pause_bttn').hide() // since we are not playing initially
 function update_image(){
     var fname = sprintf('imgs/cam1logfile1_%05d.jpeg', [current_image]); // Name of the image file.
     $('#to_annotate').attr('src', fname); // Actually load the image.
+    $(window).load(function(){});
     var new_text = sprintf('You are currently on frame %d / %d', current_image, NIMAGES);
     $('#info-text').text( new_text ); // Update the text at the top
 } 
