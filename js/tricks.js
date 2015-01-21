@@ -10,7 +10,7 @@ $('#pause_bttn').hide() // since we are not playing initially
 var annotate_images={};
 for (i=0;i<NIMAGES;i++){
     annotate_images[i] = new Image();
-    var fname = sprintf('imgs/cam1logfile1_%05d.jpeg', [current_image]); // Name of the image file.
+    var fname = sprintf('imgs/cam1logfile1_%05d.jpeg', [i+1]); // Name of the image file.
     annotate_images[i].src = fname
 }
 
