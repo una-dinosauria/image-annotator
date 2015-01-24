@@ -10,6 +10,23 @@
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
 		<!-- Optional theme -->
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css">
+
+		<style>
+			#container {
+				position: relative;
+				padding: 0;
+			}
+			#container img {
+				position: relative;
+				top: 0;
+				left: 0;
+			}
+			#holder {
+				position: relative;
+				top: 0;
+				left: 0;
+			}
+		</style>
 	</head>
 
 	<body>
@@ -26,28 +43,40 @@
 				<p class="lead" id="info-text">You are currently on frame 1 / 100</p>
 			</div>
 
-			<div>
+			<div id="container">
+
+				<!-- raphael js div -->
 				<!-- Hardcoded too. get rid of it eventually -->
+
+				<!--
 				<img id="to_annotate" src="imgs/undercam/cam1logfile1/cam1logfile1_00001.jpeg" />
+				-->
+
+				<div id="holder"></div>
+
 			</div>
 
 			<div class="btn-group" role="group" aria-label="...">
 				<button id="back_bttn" type="button" class="btn btn-default">
 					<span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
 				</button>
-                <button id="play_bttn" type="button" class="btn btn-default">
-                    <span class="glyphicon glyphicon-play" aria-hidden="true"></span>
-                </button>
-                <button id="pause_bttn" type="button" class="btn btn-default">
-                    <span class="glyphicon glyphicon-pause" aria-hidden="true"></span>
-                </button>
-				 <button id="stop_bttn" type="button" class="btn btn-default">
-                    <span class="glyphicon glyphicon-stop" aria-hidden="true"></span>
-                </button>
-                <button id="fwd_bttn" type="button" class="btn btn-default">
+				<button id="play_bttn" type="button" class="btn btn-default">
+					<span class="glyphicon glyphicon-play" aria-hidden="true"></span>
+				</button>
+				<button id="pause_bttn" type="button" class="btn btn-default">
+					<span class="glyphicon glyphicon-pause" aria-hidden="true"></span>
+				</button>
+				<button id="stop_bttn" type="button" class="btn btn-default">
+					<span class="glyphicon glyphicon-stop" aria-hidden="true"></span>
+				</button>
+				<button id="fwd_bttn" type="button" class="btn btn-default">
 					<span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
 				</button>
 			</div>
+
+			<!--
+			<div id="holder"></div>
+			-->
 
 		</center>
 
@@ -58,8 +87,169 @@
 		<!-- Include all compiled plugins (below), or include individual files as needed -->
 		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
 
-		<!-- load our own javascript code -->
-		<script src="js/tricks.js"></script>
+		<!-- raphael-js for svg on canvas -->
+		<script src="js/raphael-min.js"></script>
+
+		<script>
+
+			var r;
+
+			window.onload = function () {
+				r = Raphael("holder", 640, 480),
+				discattr = {fill: "#000", stroke: "none"};
+				r.image("imgs/undercam/cam1logfile1/cam1logfile1_00001.jpeg", 0,0,640,480);
+				r.rect(0, 0, 640, 480, 0).attr({stroke: "#666"});
+				r.text(310, 20, "Drag the points to change the curves").attr({fill: "#fff", "font-size": 16});
+				function curve(x, y, ax, ay, bx, by, zx, zy, color) {
+					var path = [["M", x, y], ["C", ax, ay, bx, by, zx, zy]],
+					path2 = [["M", x, y], ["L", ax, ay], ["M", bx, by], ["L", zx, zy]],
+					curve = r.path(path).attr({stroke: color || Raphael.getColor(), "stroke-width": 4, "stroke-linecap": "round"}),
+					controls = r.set(
+					r.path(path2).attr({stroke: "#000", "stroke-dasharray": ". "}),
+					r.circle(x, y, 5).attr(discattr),
+					r.circle(ax, ay, 5).attr(discattr),
+					r.circle(bx, by, 5).attr(discattr),
+					r.circle(zx, zy, 5).attr(discattr)
+					);
+					controls[1].update = function (x, y) {
+						var X = this.attr("cx") + x,
+						Y = this.attr("cy") + y;
+						this.attr({cx: X, cy: Y});
+						path[0][1] = X;
+						path[0][2] = Y;
+						path2[0][1] = X;
+						path2[0][2] = Y;
+						controls[2].update(x, y);
+					};
+					controls[2].update = function (x, y) {
+						var X = this.attr("cx") + x,
+						Y = this.attr("cy") + y;
+						this.attr({cx: X, cy: Y});
+						path[1][1] = X;
+						path[1][2] = Y;
+						path2[1][1] = X;
+						path2[1][2] = Y;
+						curve.attr({path: path});
+						controls[0].attr({path: path2});
+					};
+					controls[3].update = function (x, y) {
+						var X = this.attr("cx") + x,
+						Y = this.attr("cy") + y;
+						this.attr({cx: X, cy: Y});
+						path[1][3] = X;
+						path[1][4] = Y;
+						path2[2][1] = X;
+						path2[2][2] = Y;
+						curve.attr({path: path});
+						controls[0].attr({path: path2});
+					};
+					controls[4].update = function (x, y) {
+						var X = this.attr("cx") + x,
+						Y = this.attr("cy") + y;
+						this.attr({cx: X, cy: Y});
+						path[1][5] = X;
+						path[1][6] = Y;
+						path2[3][1] = X;
+						path2[3][2] = Y;
+						controls[3].update(x, y);
+					};
+					controls.drag(move, up);
+				}
+				function move(dx, dy) {
+					this.update(dx - (this.dx || 0), dy - (this.dy || 0));
+					this.dx = dx;
+					this.dy = dy;
+				}
+				function up() {
+					this.dx = this.dy = 0;
+				}
+				curve(70, 100, 110, 100, 130, 200, 170, 200, "hsb(0, .75, .75)");
+				curve(170, 100, 210, 100, 230, 200, 270, 200, "hsb(.8, .75, .75)");
+				curve(270, 100, 310, 100, 330, 200, 370, 200, "hsb(.3, .75, .75)");
+				curve(370, 100, 410, 100, 430, 200, 470, 200, "hsb(.6, .75, .75)");
+				curve(470, 100, 510, 100, 530, 200, 570, 200, "hsb(.1, .75, .75)");
+			};
+
+			var NIMAGES = 100;
+			var play                // this is set to stop the playing when paused or stopped
+			var current_image = 1;  // the image we are looking at.
+			$('#pause_bttn').hide() // since we are not playing initially
+
+			var img_path = 'imgs/undercam/cam1logfile1/cam1logfile1_%05d.jpeg';
+
+			// preload images
+			var annotate_images={};
+			for (i=0;i<NIMAGES;i++) {
+				annotate_images[i] = new Image();
+				var fname = sprintf( img_path, [i+1] ); // Name of the image file.
+				annotate_images[i].src = fname
+			}
+
+			// updates the frame details
+			function update_image() {
+				var fname = sprintf( img_path, [current_image]); // Name of the image file.
+				r.image(fname,0,0,640,480);
+				$('#to_annotate').attr('src', fname); // Actually load the image.
+				var new_text = sprintf('You are currently on frame %d / %d', current_image, NIMAGES);
+				$('#info-text').text( new_text ); // Update the text at the top
+			}
+
+			// set frame no to frame_no
+			function set_frame( frame_no ) {
+				current_image  = frame_no;
+				update_image();
+			}
+
+			// moves ahead by no_of_frame --- can take negative no. and go back
+			function advance_frame(no_of_frame){
+				var temp_current_image = current_image + no_of_frame;
+				if (temp_current_image > NIMAGES){
+					current_image = NIMAGES;
+					}else if  (temp_current_image < 1){
+					current_image = 1;
+					}else{
+					current_image = temp_current_image;
+				}
+				update_image();
+				return ;
+			}
+
+
+			$('#fwd_bttn').click(function () {
+				advance_frame(1);
+			});
+
+			//currently playing speed is set to 10fps
+			$('#play_bttn').click(function () {
+				$('#play_bttn').toggle();
+				$('#pause_bttn').toggle();
+				play = window.setInterval(function() {
+					advance_frame(1);
+					if (current_image == NIMAGES){
+						window.clearInterval(play);
+					}
+				},100);
+			});
+
+			$('#pause_bttn').click(function () {
+			$('#play_bttn').toggle();
+			$('#pause_bttn').toggle();
+			window.clearInterval(play);
+			});
+
+			$('#stop_bttn').click(function () {
+			window.clearInterval(play);
+			$('#play_bttn').show();
+			$('#pause_bttn').hide();
+			set_frame(1);
+			});
+
+			$('#back_bttn').click( function() {
+			advance_frame(-1);
+			});
+
+
+		</script>
 
 	</body>
 
