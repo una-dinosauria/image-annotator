@@ -6,7 +6,7 @@ var play                // this is set to stop the playing when paused or stoppe
 var current_image = 1;  // the image we are looking at.
 $('#pause_bttn').hide() // since we are not playing initially
 
-var img_path = 'imgs/undercam/cam1logfile1_%05.jpeg';
+var img_path = 'imgs/undercam/cam1logfile1/cam1logfile1_%05d.jpeg';
 
 //preload images
 var annotate_images={};
