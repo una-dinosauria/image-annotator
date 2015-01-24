@@ -8,7 +8,7 @@
 
 // --
 // Julieta. January 2015.
-
+/
 
 // Parameter according to the paper
 var padding = 1;
@@ -33,3 +33,5 @@ var sz = Math.floor( target_sz * (1 + padding) );
 var output_sigma = Math.sqrt( target_sz[0] * target_sz[1] ) * output_sigma_factor;
 
 // To process an array in a few lines use array.forEach: http://jsfiddle.net/9dc7mofp/
+
+
