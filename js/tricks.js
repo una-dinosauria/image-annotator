@@ -1,23 +1,16 @@
-
 // This is where our main code will be.
 
-var NIMAGES = 111;
-var play                // this is set to stop the playing when paused or stopped
-var current_image = 1;  // the image we are looking at.
-$('#pause_bttn').hide() // since we are not playing initially
-
-//preload images
-var annotate_images={};
-for (i=0;i<NIMAGES;i++){
-    annotate_images[i] = new Image();
-    var fname = sprintf('imgs/cam1logfile1_%05d.jpeg', [i+1]); // Name of the image file.
-    annotate_images[i].src = fname
-}
+var NIMAGES         = 111;
+var play;                    // this is set to stop the playing when paused or stopped
+var current_image   = 1;    // the image we are looking at.
+var annotate_images = {};   // this variable has all the preloaded images
+var FPS             = 10;  // playing speed
 
 //updates the frame details.
 function update_image(){
-    var fname = sprintf('imgs/cam1logfile1_%05d.jpeg', [current_image]); // Name of the image file.
-    $('#to_annotate').attr('src', fname); // Actually load the image.
+    var canvas  = document.getElementById('to_annotate');
+    var context = canvas.getContext('2d');
+    context.drawImage(annotate_images[current_image-1],0,0);
     var new_text = sprintf('You are currently on frame %d / %d', current_image, NIMAGES);
     $('#info-text').text( new_text ); // Update the text at the top
 } 
@@ -42,6 +35,17 @@ function advance_frame(no_of_frame){
     return ; 
 }
 
+$('#pause_bttn').hide()     // since we are not playing initially
+
+//preload images
+for (i=0;i<NIMAGES;i++){
+    annotate_images[i] = new Image();
+    var fname = sprintf('imgs/cam1logfile1_%05d.jpeg', [i+1]); // Name of the image file.
+    annotate_images[i].src = fname
+}
+
+$('#to_annotate').attr({width:annotate_images[0].naturalWidth,height:annotate_images[0].naturalHeight})
+set_frame(1)
 
 $('#fwd_bttn').click(function () {
     advance_frame(1);
@@ -56,7 +60,7 @@ $('#play_bttn').click(function () {
         if (current_image == NIMAGES){
             window.clearInterval(play);
         }
-    },100);
+    },1000/FPS);
 });
 
 $('#pause_bttn').click(function () {
