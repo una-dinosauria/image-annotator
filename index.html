@@ -26,12 +26,9 @@
 
 			<div id="container">
 
-				<!-- raphael js div -->
-				<!-- Hardcoded too. get rid of it eventually -->
-
-				<!--
-				<img id="to_annotate" src="imgs/undercam/cam1logfile1/cam1logfile1_00001.jpeg" />
-				-->
+				<!-- hidden canvas and image to conver images to matrices -->
+				<canvas id="hcanvas" width="640" height="480"></canvas>
+				<canvas id="hcanvas2" width="640" height="480"></canvas>
 
 				<div id="holder"></div>
 
@@ -68,6 +65,8 @@
 		<!-- Include all compiled plugins (below), or include individual files as needed -->
 		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
 
+		<!-- optical flow -->
+		<script src="js/oflow.js"></script>
 		<!-- raphael-js for svg on canvas -->
 		<script src="js/raphael-min.js"></script>
 
@@ -75,6 +74,7 @@
 
 			// Make the raphael canvas available outside its local function
 			var r;
+			var img_path = 'imgs/undercam/cam1logfile1/cam1logfile1_%05d.jpeg';
 
 			window.onload = function () {
 				r = Raphael("holder", 640, 480),
@@ -83,7 +83,7 @@
 				discattr = {fill: "#fff", stroke: "none"};
 
 				// Draw the current image on the back of the canvas.
-				r.image("imgs/undercam/cam1logfile1/cam1logfile1_00001.jpeg", 0,0,640,480);
+				r.image( sprintf(img_path, 1), 0,0,640,480);
 
 				// Draw a rectangle around the imag and put some instructions.
 				r.rect(0, 0, 640, 480, 0).attr({stroke: "#666"});
@@ -163,10 +163,8 @@
 
 			var NIMAGES = 100;
 			var play                // this is set to stop the playing when paused or stopped
-			var current_image = 1;  // the image we are looking at.
+			var current_image = 1;  // the image we are looking at.Drag
 			$('#pause_bttn').hide() // since we are not playing initially
-
-			var img_path = 'imgs/undercam/cam1logfile1/cam1logfile1_%05d.jpeg';
 
 			// preload images
 			var annotate_images={};
@@ -175,6 +173,41 @@
 				var fname = sprintf( img_path, [i+1] ); // Name of the image file.
 				annotate_images[i].src = fname
 			}
+
+			//$('#himg').attr('src', sprintf( img_path, 1 ));
+			var img_matrix_1,
+				img_matrix_2,
+				tmp_img_1 = new Image(),
+				tmp_img_2 = new Image(),
+				ctx  = $('#hcanvas')[0].getContext("2d");
+				ctx2 = $('#hcanvas2')[0].getContext("2d");
+
+			// Load the first image.
+			tmp_img_1.src    = sprintf( img_path, 15 );
+			tmp_img_1.onload = function() {
+
+				ctx.drawImage( tmp_img_1, 0, 0 );
+				img_matrix_1 = ctx.getImageData(0, 0, 640, 480);
+
+				// Load the second image.
+				tmp_img_2.src = sprintf( img_path, 16);
+				tmp_img_2.onload = function() {
+
+					ctx2.drawImage( tmp_img_2, 0, 0 );
+					img_matrix_2 = ctx2.getImageData(0, 0, 640, 480);
+
+					console.log( img_matrix_1 );
+					console.log( img_matrix_2 );
+
+					// Compute optical flow
+					flow = new oflow.FlowCalculator;
+					optical_flow = flow.calculate( img_matrix_1, img_matrix_2, 640, 480 );
+					console.log( optical_flow );
+
+				}
+			}
+
+
 
 			// updates the frame details
 			function update_image() {
@@ -204,7 +237,6 @@
 				update_image();
 				return ;
 			}
-
 
 			$('#fwd_bttn').click(function () {
 				advance_frame(1);
