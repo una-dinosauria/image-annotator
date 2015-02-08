@@ -2,6 +2,7 @@ from PIL import Image
 from matplotlib import pyplot as plt
 import cv2
 import numpy as np
+import os
 
 def draw_flow(img, flow, step=16):
 	h, w = img.shape[:2]
@@ -27,20 +28,59 @@ def draw_hsv(flow):
 	rgb = cv2.cvtColor(hsv, cv2.COLOR_HSV2RGB)
 	return rgb
 
-# Second argument 0 means load in grayscale.
-bpath = 'imgs/obliquecam/cam1logfile4/'
+if __name__ == '__main__':
 
-for i in range(99):
+	dirs = ['obliquecam/cam1logfile4/',
+	'obliquecam/cam1logfile5/',
+	'obliquecam/cam2logfile4/',
+	'obliquecam/cam1logfile7/',
+	'obliquecam/cam2logfile5/',
+	'obliquecam/cam1logfile6/',
+	'obliquecam/cam2logfile7/',
+	'obliquecam/cam2logfile6/',
+	'undercam/cam1logfile2/',
+	'undercam/cam2logfile2/',
+	'undercam/cam2logfile1/',
+	'undercam/cam2logfile3/',
+	'undercam/cam1logfile1/',
+	'undercam/cam1logfile3/'];
 
-	im  = cv2.imread(bpath + 'cam1logfile4_{0:05d}.jpeg'.format(i+1),   0);
-	im2 = cv2.imread(bpath + 'cam1logfile4_{0:05d}.jpeg'.format(i+2), 0);
+	bpath = 'imgs/'
+	dpath = 'flow/'
 
-	flow = cv2.calcOpticalFlowFarneback(im, im2, None, 0.5, 3, 15, 3, 5, 1.2, 0)
-	# rgb  = draw_hsv(flow)
-	rgb  = draw_flow( im2, flow );
+	for directory in dirs:
 
-	plt.imshow( rgb )
-	plt.pause(.1);
-	plt.draw()
+		files = sorted(os.listdir( bpath + directory ));
+		print '%d files in %s' % ( len(files), directory )
+
+		for i in range( len(files)-1 ):
+
+			# Second argument 0 means load in grayscale.
+			im  = cv2.imread( bpath + directory + files[i], 0);
+			im2 = cv2.imread( bpath + directory + files[i+1], 0);
+
+			print 'Computing flow between %s and %s' % (files[i], files[i+1])
+
+			flow = cv2.calcOpticalFlowFarneback(im, im2, None, 0.5, 3, 15, 3, 5, 1.2, 0)
+			flow = flow + 128
+
+			# rgb  = draw_hsv(flow)
+			# rgb  = draw_flow( im2, flow );
+
+			print 'Min is %.2f and max is %.2f' % (np.min(flow), np.max(flow))
+
+			w, h = np.shape( im )
+			rgb = np.zeros( (w, h, 3) );
+			rgb[:,:,0] = flow[:,:,0];
+			rgb[:,:,1] = flow[:,:,1];
+
+			rgb = rgb.astype( np.uint8 );
+
+			im  = cv2.imwrite( dpath + directory + files[i], rgb);
+
+			# plt.imshow( rgb )
+			# plt.colorbar()
+			# plt.pause(.1);
+			# plt.draw()
 
 
