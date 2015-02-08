@@ -187,14 +187,14 @@
 			tmp_img_1.onload = function() {
 
 				ctx.drawImage( tmp_img_1, 0, 0 );
-				img_matrix_1 = ctx.getImageData(0, 0, 640, 480);
+				img_matrix_1 = ctx.getImageData(0, 0, 640, 480).data;
 
 				// Load the second image.
 				tmp_img_2.src = sprintf( img_path, 16);
 				tmp_img_2.onload = function() {
 
 					ctx2.drawImage( tmp_img_2, 0, 0 );
-					img_matrix_2 = ctx2.getImageData(0, 0, 640, 480);
+					img_matrix_2 = ctx2.getImageData(0, 0, 640, 480).data;
 
 					console.log( img_matrix_1 );
 					console.log( img_matrix_2 );
