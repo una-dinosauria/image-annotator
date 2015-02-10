@@ -176,17 +176,31 @@
 				annotate_images[i].src = fname
 			}
 
+			// This should give you access to the precomputed flow.
 			var img = new Image()
 			var	c = document.createElement("canvas")
 			img.src = sprintf( flow_path, 1);
 			img.onload = function() {
-				c.width  = img.width;
+				c.width = img.width;
 				c.height = img.height;
+				var w = img.width, h = img.height;
 				var ctx = c.getContext("2d");
 				ctx.drawImage(img, 0, 0);
-				console.log( c );
 				var idata = ctx.getImageData(0, 0, img.width, img.height);
-				console.log( idata.data );
+				var p     = idata.data;
+				var lidx;
+				var r, g, b, alpha;
+				// Loop through image pixels
+				for (var y=0; y<img.height; y++) {
+					for (var x=0; x<img.width; x++) {
+
+						l = ( y*w + x ) * 4; // Convert to linear index
+						r = p[l];   // red should always be zero
+						g = p[l+1]; // green minus 128 is flow in x
+						b = p[l+2]  //  blue minus 128 is flow in y
+						alpha = p[l+3]; // alpha will always be 255
+					}
+				}
 			}
 
 			// updates the frame details
