@@ -32,12 +32,10 @@
 =======
 			<div id="container">
 
-				<!-- raphael js div -->
-				<!-- Hardcoded too. get rid of it eventually -->
-
+				<!-- hidden canvas and image to conver images to matrices -->
 				<!--
-				<img id="to_annotate" src="imgs/undercam/cam1logfile1/cam1logfile1_00001.jpeg" />
-				-->
+				<canvas id="hcanvas" width="640" height="400"></canvas>
+				<canvas id="hcanvas2" width="640" height="400"></canvas> -->
 
 				<div id="holder"></div>
 
@@ -75,6 +73,8 @@
 		<!-- Include all compiled plugins (below), or include individual files as needed -->
 		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
 
+		<!-- optical flow -->
+		<script src="js/oflow.js"></script>
 		<!-- raphael-js for svg on canvas -->
 		<script src="js/raphael-min.js"></script>
 
@@ -82,6 +82,8 @@
 
 			// Make the raphael canvas available outside its local function
 			var r;
+			var img_path  = 'imgs/undercam/cam1logfile1/cam1logfile1_%05d.jpeg';
+			var flow_path = 'flow/undercam/cam1logfile1/cam1logfile1_%05d.jpeg';
 
 			window.onload = function () {
 				r = Raphael("holder", 640, 480),
@@ -90,7 +92,7 @@
 				discattr = {fill: "#fff", stroke: "none"};
 
 				// Draw the current image on the back of the canvas.
-				r.image("imgs/undercam/cam1logfile1/cam1logfile1_00001.jpeg", 0,0,640,480);
+				r.image( sprintf(img_path, 1), 0,0,640,480);
 
 				// Draw a rectangle around the imag and put some instructions.
 				r.rect(0, 0, 640, 480, 0).attr({stroke: "#666"});
@@ -170,10 +172,8 @@
 
 			var NIMAGES = 100;
 			var play                // this is set to stop the playing when paused or stopped
-			var current_image = 1;  // the image we are looking at.
+			var current_image = 1;  // the image we are looking at.Drag
 			$('#pause_bttn').hide() // since we are not playing initially
-
-			var img_path = 'imgs/undercam/cam1logfile1/cam1logfile1_%05d.jpeg';
 
 			// preload images
 			var annotate_images={};
@@ -181,6 +181,33 @@
 				annotate_images[i] = new Image();
 				var fname = sprintf( img_path, [i+1] ); // Name of the image file.
 				annotate_images[i].src = fname
+			}
+
+			// This should give you access to the precomputed flow.
+			var img = new Image()
+			var	c = document.createElement("canvas")
+			img.src = sprintf( flow_path, 1);
+			img.onload = function() {
+				c.width = img.width;
+				c.height = img.height;
+				var w = img.width, h = img.height;
+				var ctx = c.getContext("2d");
+				ctx.drawImage(img, 0, 0);
+				var idata = ctx.getImageData(0, 0, img.width, img.height);
+				var p     = idata.data;
+				var lidx;
+				var r, g, b, alpha;
+				// Loop through image pixels
+				for (var y=0; y<img.height; y++) {
+					for (var x=0; x<img.width; x++) {
+
+						l = ( y*w + x ) * 4; // Convert to linear index
+						r = p[l];   // red should always be zero
+						g = p[l+1]; // green minus 128 is flow in x
+						b = p[l+2]  //  blue minus 128 is flow in y
+						alpha = p[l+3]; // alpha will always be 255
+					}
+				}
 			}
 
 			// updates the frame details
@@ -211,7 +238,6 @@
 				update_image();
 				return ;
 			}
-
 
 			$('#fwd_bttn').click(function () {
 				advance_frame(1);
