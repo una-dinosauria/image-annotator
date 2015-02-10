@@ -27,8 +27,9 @@
 			<div id="container">
 
 				<!-- hidden canvas and image to conver images to matrices -->
+				<!--
 				<canvas id="hcanvas" width="640" height="400"></canvas>
-				<canvas id="hcanvas2" width="640" height="400"></canvas>
+				<canvas id="hcanvas2" width="640" height="400"></canvas> -->
 
 				<div id="holder"></div>
 
@@ -74,7 +75,8 @@
 
 			// Make the raphael canvas available outside its local function
 			var r;
-			var img_path = 'imgs/undercam/cam1logfile1/cam1logfile1_%05d.jpeg';
+			var img_path  = 'imgs/undercam/cam1logfile1/cam1logfile1_%05d.jpeg';
+			var flow_path = 'flow/undercam/cam1logfile1/cam1logfile1_%05d.jpeg';
 
 			window.onload = function () {
 				r = Raphael("holder", 640, 480),
@@ -174,40 +176,18 @@
 				annotate_images[i].src = fname
 			}
 
-			//$('#himg').attr('src', sprintf( img_path, 1 ));
-			var img_matrix_1,
-				img_matrix_2,
-				tmp_img_1 = new Image(),
-				tmp_img_2 = new Image(),
-				ctx  = $('#hcanvas')[0].getContext("2d");
-				ctx2 = $('#hcanvas2')[0].getContext("2d");
-
-			// Load the first image.
-			tmp_img_1.src    = sprintf( img_path, 15 );
-			tmp_img_1.onload = function() {
-
-				ctx.drawImage( tmp_img_1, 0, 0 );
-				img_matrix_1 = ctx.getImageData(0, 0, 640, 480).data;
-
-				// Load the second image.
-				tmp_img_2.src = sprintf( img_path, 16);
-				tmp_img_2.onload = function() {
-
-					ctx2.drawImage( tmp_img_2, 0, 0 );
-					img_matrix_2 = ctx2.getImageData(0, 0, 640, 480).data;
-
-					console.log( img_matrix_1 );
-					console.log( img_matrix_2 );
-
-					// Compute optical flow
-					flow = new oflow.FlowCalculator;
-					optical_flow = flow.calculate( img_matrix_1, img_matrix_2, 640, 480 );
-					console.log( optical_flow );
-
-				}
+			var img = new Image()
+			var	c = document.createElement("canvas")
+			img.src = sprintf( flow_path, 1);
+			img.onload = function() {
+				c.width  = img.width;
+				c.height = img.height;
+				var ctx = c.getContext("2d");
+				ctx.drawImage(img, 0, 0);
+				console.log( c );
+				var idata = ctx.getImageData(0, 0, img.width, img.height);
+				console.log( idata.data );
 			}
-
-
 
 			// updates the frame details
 			function update_image() {
