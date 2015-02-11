@@ -20,8 +20,7 @@
 			</div>
 
 			<div>
-				<! TODO:--- Hardcoded... get rid of it eventually-- Got rid -->
-				<p class="lead" id="info-text">You are currently on frame 1 / 100</p>
+				<p class="lead" id="info-text">xyx/ 100</p>
 			</div>
 			<!--<div id="container">-->
 
@@ -124,8 +123,23 @@
                                 // TODO: Define how should it contain  ---DONE
                                 // This is all the data we need to save or should be caring about.
                                 // Use of attributes seems the most plausible way
-   
-    // Have a variable to handle color of different datapoint and lines 
+    
+            //we define the connections here, so that we can color them differently
+    var connections = ["head-body","body-larm","body-rarm","body-tail","tail-lleg","tail-rleg","tail-mtail"];
+
+    var connection_color = {"head-body" : "hsb(.3, .75, .75)",
+                            "body-larm" : "hsb(.6, .75, .75)",
+                            "body-rarm" : "hsb(.1, .75, .75)",
+                            "body-tail" : "hsb(.3, .75, .75)",
+                            "tail-lleg" : "hsb(.6, .75, .75)",
+                            "tail-rleg" : "hsb(.1, .75, .75)",
+                            "tail-mtail": "hsb(.3, .75, .75)"};
+    
+    var parts = ["head","body","larm","rarm","tail","lleg","rleg","mtail"];
+    //showing different color on control points in different states
+    var control_color = {"click" : {fill: "#FF8000", stroke: "none"}, 
+                         "interp": {fill: "#FF0000", stroke: "none"},
+                        "default": {fill: "#FFFFFF", stroke: "none"}};   
     
     // preload all the images and flow; To avoid lags
     for (i=0; i<nimages; i++) {
@@ -149,100 +163,161 @@
     // This function handles drawing of svg and dragging 
     // TODO: change it to handle a mouse
 
-    function curve(keypoints, color) {
-    // draw the lines in svg format.
-        var path = [["M", keypoints.head.x, keypoints.head.y], 
-                    ["L", keypoints.body.x, keypoints.body.y], 
-                    ["L", keypoints.larm.x, keypoints.larm.y], 
-                    ["M", keypoints.rarm.x, keypoints.rarm.y], 
-                    ["L", keypoints.body.x, keypoints.body.y],
-                    ["L", keypoints.tail.x, keypoints.tail.y], 
-                    ["L", keypoints.lleg.x, keypoints.lleg.y], 
-                    ["M", keypoints.rleg.x, keypoints.rleg.y], 
-                    ["L", keypoints.tail.x, keypoints.tail.y], 
-                    ["L", keypoints.mtail.x, keypoints.mtail.y]];
-        curve = r.path(path).attr({stroke: color || raphael.getcolor(), "stroke-width": 4, "stroke-linecap": "round"});
-        // curve.toFront();
-        // draw the control points.
+    function draw_puppet(keypoints, color) {
+        // define lines
+
+        //function to generate path arrays
+        function gen_path_array(str1,str2){
+            return ["M", keypoints[str1].x, keypoints[str1].y, "L", keypoints[str2].x, keypoints[str2].y];
+        }
+        
+        // draw connections
+        var path = {};
+        var curve = {} 
+        connections.forEach( function(ele,idx){
+            path[ele] = gen_path_array (ele.split("-")[0],ele.split("-")[1]);
+        });
+        connections.forEach( function (ele,idx){
+            curve[ele] = r.path(path[ele]).attr({stroke: connection_color[ele]||Raphael.getColor(),"stroke-width": 4, "stroke-linecap": "round"});
+        });
+        
         controls = r.set(
-            r.circle(keypoints.head.x, keypoints.head.y, 5).attr(discattr),
-            r.circle(keypoints.body.x, keypoints.body.y, 5).attr(discattr),
-            r.circle(keypoints.larm.x, keypoints.larm.y, 5).attr(discattr),
-            r.circle(keypoints.rarm.x, keypoints.rarm.y, 5).attr(discattr),
-            r.circle(keypoints.tail.x, keypoints.tail.y, 5).attr(discattr),
-            r.circle(keypoints.lleg.x, keypoints.lleg.y, 5).attr(discattr),
-            r.circle(keypoints.rleg.x, keypoints.rleg.y, 5).attr(discattr),
-            r.circle(keypoints.mtail.x, keypoints.mtail.y, 5).attr(discattr)
+            r.circle(keypoints.head.x, keypoints.head.y, 5),
+            r.circle(keypoints.body.x, keypoints.body.y, 5),
+            r.circle(keypoints.larm.x, keypoints.larm.y, 5),
+            r.circle(keypoints.rarm.x, keypoints.rarm.y, 5),
+            r.circle(keypoints.tail.x, keypoints.tail.y, 5),
+            r.circle(keypoints.lleg.x, keypoints.lleg.y, 5),
+            r.circle(keypoints.rleg.x, keypoints.rleg.y, 5),
+            r.circle(keypoints.mtail.x, keypoints.mtail.y, 5)
         );
         
-        // set control listeners for all the points.
+        //since order is same I am saved.
+        var i=0;
+        for (var prop in keypoints){
+            if (keypoints[prop].interp){
+                controls[i].attr(control_color["interp"]);
+            }else{
+                controls[i].attr(control_color["default"]);
+            }
+            i=i+1;
+        }    
+
+        // set control listeners for all the points. There ain't no easy way for this
         controls[0].update = function (x, y) {
             var X = this.attr("cx") + x, Y = this.attr("cy") + y;
-            keypoints.head.x = X; keypoints.head.y = Y;
+            keypoints.head = {x: X, y: Y, interp: false};
             this.attr({cx: X, cy: Y});
-            path[0][1] = X; path[0][2] = Y;
-            curve.attr({path: path});
-            //console.log('X:' + X + " Y: " + Y);
-        };
+            this.attr(control_color["default"]);
+            connections.forEach( function(ele,idx){
+                path[ele] = gen_path_array (ele.split("-")[0],ele.split("-")[1]);
+            });
+            connections.forEach( function (ele,idx){
+                curve[ele].attr({path:path[ele]});
+                });
+            };
+        
         controls[1].update = function (x, y) {
             var X = this.attr("cx") + x, Y = this.attr("cy") + y;
-            keypoints.body.x = X; keypoints.body.y = Y
+            keypoints.body = {x: X, y: Y, interp: false};
             this.attr({cx: X, cy: Y});
-            path[1][1] = X; path[1][2] = Y;
-            path[4][1] = X; path[4][2] = Y;
-            curve.attr({path: path});
-            //console.log('X:' + Y + " Y: " + Y);
-        }; 
+            this.attr(control_color["default"]);
+            connections.forEach( function(ele,idx){
+                path[ele] = gen_path_array (ele.split("-")[0],ele.split("-")[1]);
+            });
+            connections.forEach( function (ele,idx){
+                curve[ele].attr({path:path[ele]});
+                });
+            };
+
         controls[2].update = function (x, y) {
             var X = this.attr("cx") + x, Y = this.attr("cy") + y;
-            keypoints.larm.x = X; keypoints.larm.y = Y
+            keypoints.larm = {x: X, y: Y, interp: false};
             this.attr({cx: X, cy: Y});
-            path[2][1] = X; path[2][2] = Y;
-            curve.attr({path: path});
-            //console.log('X:' + X + " Y: " + Y);
-        };
+            this.attr(control_color["default"]);
+            connections.forEach( function(ele,idx){
+                path[ele] = gen_path_array (ele.split("-")[0],ele.split("-")[1]);
+            });
+            connections.forEach( function (ele,idx){
+                curve[ele].attr({path:path[ele]});
+                });
+            };
+        
         controls[3].update = function (x, y) {
             var X = this.attr("cx") + x, Y = this.attr("cy") + y;
-            keypoints.rarm.x = X; keypoints.rarm.y = Y;
+            keypoints.rarm = {x: X, y: Y, interp: false};
             this.attr({cx: X, cy: Y});
-            path[3][1] = X; path[3][2] = Y;
-            curve.attr({path: path});
-           // console.log('X:' + X + " Y: " + Y);
-        }; 
+            this.attr(control_color["default"]);
+            connections.forEach( function(ele,idx){
+                path[ele] = gen_path_array (ele.split("-")[0],ele.split("-")[1]);
+            });
+            connections.forEach( function (ele,idx){
+                curve[ele].attr({path:path[ele]});
+                });
+            };
+
         controls[4].update = function (x, y) {
             var X = this.attr("cx") + x, Y = this.attr("cy") + y;
-            keypoints.tail.x = X; keypoints.tail.y = Y
+            keypoints.tail = {x: X, y: Y, interp: false};
             this.attr({cx: X, cy: Y});
-            path[5][1] = X; path[5][2] = Y;
-            path[8][1] = X; path[8][2] = Y;
-            curve.attr({path: path});
-            //console.log('X:' + X + " Y: " + Y);
-        };
+            this.attr(control_color["default"]);
+            connections.forEach( function(ele,idx){
+                path[ele] = gen_path_array (ele.split("-")[0],ele.split("-")[1]);
+            });
+            connections.forEach( function (ele,idx){
+                curve[ele].attr({path:path[ele]});
+                });
+            };
+
         controls[5].update = function (x, y) {
             var X = this.attr("cx") + x, Y = this.attr("cy") + y;
-            keypoints.larm.x = X; keypoints.larm.y = Y    
+            keypoints.lleg = {x: X, y: Y, interp: false};
             this.attr({cx: X, cy: Y});
-            path[6][1] = X; path[6][2] = Y;
-            curve.attr({path: path});
-            //console.log('X:' + X + " Y: " + Y);
-        };
+            this.attr(control_color["default"]);
+            connections.forEach( function(ele,idx){
+                path[ele] = gen_path_array (ele.split("-")[0],ele.split("-")[1]);
+            });
+            connections.forEach( function (ele,idx){
+                curve[ele].attr({path:path[ele]});
+                });
+            };
+        
         controls[6].update = function (x, y) {
             var X = this.attr("cx") + x, Y = this.attr("cy") + y;
-            keypoints.rarm.x = X; keypoints.rarm.y = Y
+            keypoints.rleg = {x: X, y: Y, interp: false};
             this.attr({cx: X, cy: Y});
-            path[7][1] = X; path[7][2] = Y;
-            curve.attr({path: path});
-            //console.log('X:' + X + " Y: " + Y);
-        };
+            this.attr(control_color["default"]);
+            connections.forEach( function(ele,idx){
+                path[ele] = gen_path_array (ele.split("-")[0],ele.split("-")[1]);
+            });
+            connections.forEach( function (ele,idx){
+                curve[ele].attr({path:path[ele]});
+                });
+            };
+
         controls[7].update = function (x, y) {
             var X = this.attr("cx") + x, Y = this.attr("cy") + y;
-            keypoints.mtail.x = X; keypoints.mtail.y = Y
+            keypoints.mtail = {x: X, y: Y, interp: false};
             this.attr({cx: X, cy: Y});
-            path[9][1] = X; path[9][2] = Y;
-            curve.attr({path: path});
-            //console.log('X:' + X + " Y: " + Y);
-        };
+            this.attr(control_color["default"]);
+            connections.forEach( function(ele,idx){
+                path[ele] = gen_path_array (ele.split("-")[0],ele.split("-")[1]);
+            });
+            connections.forEach( function (ele,idx){
+                curve[ele].attr({path:path[ele]});
+                });
+            };
         controls.drag(move, up);
+        controls.mousedown(function () {
+            this.attr(control_color["click"]); 
+        });
+        controls.mouseover(function () {
+            this.attr(control_color["click"]); 
+        });
+        controls.mouseup(function () {
+            this.attr(control_color["default"]); 
+        });
+        
     } // end curve
 
     function move(dx, dy) {
@@ -257,12 +332,17 @@
     
     // updates the frame details
     function update_image() {
-        img = annotation[current_image-1].img
+    
+        img = annotation[current_image-1].img;
+        
         r.image(img.src,0,0,img.width,img.height);
-        // since image should be background
-        //    $('#to_annotate').attr('src', fname); // actually load the image.
+        if (annotation[current_image-1].hasOwnProperty("data")){
+            var annotate = annotation[current_image-1].data;
+            draw_puppet(annotate);
+        }
         var new_text = sprintf('you are currently on frame %d / %d', current_image, nimages);
         $('#info-text').text( new_text ); // update the text at the top
+    
     }
 
     // set frame no to frame_no
@@ -289,7 +369,6 @@
         advance_frame(1);
     });
 
-    //currently playing speed is set to 10fps
     $('#play_bttn').click(function () {
         $('#play_bttn').hide();
         $('#pause_bttn').show();
@@ -298,7 +377,7 @@
             if (current_image == nimages){
                 window.clearInterval(play);
             }
-            },100);
+            },1000/FPS);
         });
 
     $('#pause_bttn').click(function () {
@@ -325,15 +404,15 @@
         }     
         var annotate = annotation[current_image-1].data;
             
-        annotate.head = {x:280,y:240};
-        annotate.body = {x:280,y:260};
-        annotate.larm = {x:260,y:255};
-        annotate.rarm = {x:300,y:255};
-        annotate.lleg = {x:260,y:275};
-        annotate.rleg = {x:300,y:275};
-        annotate.tail = {x:280,y:280};
-        annotate.mtail = {x:280,y:290};
-        curve( annotate, "hsb(0, .75, .75)");
+        annotate.head = {x:280,y:240,interp:true};
+        annotate.body = {x:280,y:260,interp:true};
+        annotate.larm = {x:260,y:255,interp:true};
+        annotate.rarm = {x:300,y:255,interp:true};
+        annotate.lleg = {x:260,y:275,interp:true};
+        annotate.rleg = {x:300,y:275,interp:true};
+        annotate.tail = {x:280,y:280,interp:true};
+        annotate.mtail = {x:280,y:290,interp:true};
+        draw_puppet(annotate);
         console.log('here');
     });
 
