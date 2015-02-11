@@ -203,9 +203,9 @@
         };
         controls[3].update = function (x, y) {
             var X = this.attr("cx") + x, Y = this.attr("cy") + y;
-            keypoints.rarm.x = X; keypoints.rarm.y = Y
+            keypoints.rarm.x = X; keypoints.rarm.y = Y;
             this.attr({cx: X, cy: Y});
-            path[3][1] = X; path[3][2] = X;
+            path[3][1] = X; path[3][2] = Y;
             curve.attr({path: path});
            // console.log('X:' + X + " Y: " + Y);
         }; 
