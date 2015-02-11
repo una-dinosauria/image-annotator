@@ -49,6 +49,13 @@
 				<button id="fwd_bttn" type="button" class="btn btn-default">
 					<span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
 				</button>
+
+                <!-- Generate a random annotation
+                    TODO: find a better button and place it a proper location-->
+                <button id="gen_random_bttn" type="button" class="btn btn-default">
+                    <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                </button>
+
 			</div>
 
 			<!--
@@ -70,30 +77,14 @@
 		<script src="js/raphael-min.js"></script>
         <!-- Here we put all the controls --> 
 		<script> 
-        
-    /* we move here because it do not simply works in another file*/
-    // Global Variables
-    var img_path   = 'imgs/undercam/cam1logfile1/cam1logfile1_%05d.jpeg';
-    var flow_path  = 'flow/undercam/cam1logfile1/cam1logfile1_%05d.jpeg';
-    var r;
-    var nimages    = 100;       
-    var play;                   // this is set to stop the playing when paused or stopped; a compulsion
-    var current_image = 1;      // the image we are looking at
-    var FPS = 10;               // Playing speed; TODO: Provide UI to change it
-    var annotation = {};        // This should contain image, flow, as well as annotations (coordinates); 
-                                // TODO: Define how should it contain
-                                // This is all the data we need to save or should be caring about.
-                                // Use of attributes seems the most plausible way
-
-    // Note we take x as horizontal --- This has been the biggest confusion so far 
-    // for me working with images 
-
-    /* attributes of annotation so far .. 
-    *   img --- image
-            src     
+ 
+    /* General Notes: 
+        Note we take x as horizontal --- This has been the biggest confusion so far 
+        for me working with images 
+    attributes of annotation so far .. 
+        img --- image
         flow
-            src
-        keypoint
+        data
             head        (head)
                 x
                 y
@@ -119,11 +110,25 @@
                 x
                 y
     */          
-    
+        
+    /* we move here because it do not simply works in another file*/
+    // Global Variables
+    var img_path   = 'imgs/undercam/cam1logfile1/cam1logfile1_%05d.jpeg';
+    var flow_path  = 'flow/undercam/cam1logfile1/cam1logfile1_%05d.jpeg';
+    var r;
+    var nimages    = 100;       
+    var play;                   // this is set to stop the playing when paused or stopped; a compulsion
+    var current_image = 1;      // the image we are looking at
+    var FPS = 10;               // Playing speed; TODO: Provide UI to change it
+    var annotation = {};        // This should contain image, flow, as well as annotations (coordinates); 
+                                // TODO: Define how should it contain  ---DONE
+                                // This is all the data we need to save or should be caring about.
+                                // Use of attributes seems the most plausible way
+   
     // Have a variable to handle color of different datapoint and lines 
     
     // preload all the images and flow; To avoid lags
-    for (i=0;i<nimages;i++) {
+    for (i=0; i<nimages; i++) {
         annotation[i]           = [];
         annotation[i].img       = new Image();
         annotation[i].img.src   = sprintf( img_path, [i+1] );  // name of the image file.
@@ -133,63 +138,109 @@
         
     // create raphael element and show a fixed text
     r = Raphael("holder",annotation[0].img.width,annotation[0].img.height); 
-    discattr = {fill: "#fff", stroke: "none"};
-    t = r.text(310, 20, "drag the points to change the curves").attr({fill: "#fff", "font-size": 16});
-    t.toFront();
+
+    discattr    = {fill: "#fff", stroke: "none"};
+    // Note we have to keep track of every svg element we create so that we can reorder it. 
+    txt_element = r.text(310, 20, "drag the points to change the curves").attr({fill: "#fff", "font-size": 16});
+    txt_element.toFront();
+    // we don't need rectangle now... might need later
     //r.rect(0, 0, 640, 480, 0).attr({stroke: "#666"});
     
     // This function handles drawing of svg and dragging 
     // TODO: change it to handle a mouse
-    function curve(hx, hy, lax, lay, llx, lly, rlx, rly, rax, ray, color) {
+
+    function curve(keypoints, color) {
     // draw the lines in svg format.
-        var path = [["M", hx, hy], ["L", lax, lay], ["L", llx, lly], ["L", rlx, rly], ["L", rax, ray], ["L", hx, hy]];
+        var path = [["M", keypoints.head.x, keypoints.head.y], 
+                    ["L", keypoints.body.x, keypoints.body.y], 
+                    ["L", keypoints.larm.x, keypoints.larm.y], 
+                    ["M", keypoints.rarm.x, keypoints.rarm.y], 
+                    ["L", keypoints.body.x, keypoints.body.y],
+                    ["L", keypoints.tail.x, keypoints.tail.y], 
+                    ["L", keypoints.lleg.x, keypoints.lleg.y], 
+                    ["M", keypoints.rleg.x, keypoints.rleg.y], 
+                    ["L", keypoints.tail.x, keypoints.tail.y], 
+                    ["L", keypoints.mtail.x, keypoints.mtail.y]];
         curve = r.path(path).attr({stroke: color || raphael.getcolor(), "stroke-width": 4, "stroke-linecap": "round"});
-  
+        // curve.toFront();
         // draw the control points.
         controls = r.set(
-            r.circle(hx, hy, 5).attr(discattr),
-            r.circle(lax, lay, 5).attr(discattr),
-            r.circle(llx, lly, 5).attr(discattr),
-            r.circle(rlx, rly, 5).attr(discattr),
-            r.circle(rax, ray, 5).attr(discattr)
+            r.circle(keypoints.head.x, keypoints.head.y, 5).attr(discattr),
+            r.circle(keypoints.body.x, keypoints.body.y, 5).attr(discattr),
+            r.circle(keypoints.larm.x, keypoints.larm.y, 5).attr(discattr),
+            r.circle(keypoints.rarm.x, keypoints.rarm.y, 5).attr(discattr),
+            r.circle(keypoints.tail.x, keypoints.tail.y, 5).attr(discattr),
+            r.circle(keypoints.lleg.x, keypoints.lleg.y, 5).attr(discattr),
+            r.circle(keypoints.rleg.x, keypoints.rleg.y, 5).attr(discattr),
+            r.circle(keypoints.mtail.x, keypoints.mtail.y, 5).attr(discattr)
         );
         
         // set control listeners for all the points.
         controls[0].update = function (x, y) {
             var X = this.attr("cx") + x, Y = this.attr("cy") + y;
+            keypoints.head.x = X; keypoints.head.y = Y;
             this.attr({cx: X, cy: Y});
             path[0][1] = X; path[0][2] = Y;
-            path[5][1] = X; path[5][2] = Y;
             curve.attr({path: path});
-            console.log('X:' + X + " Y: " + Y);
+            //console.log('X:' + X + " Y: " + Y);
         };
         controls[1].update = function (x, y) {
             var X = this.attr("cx") + x, Y = this.attr("cy") + y;
+            keypoints.body.x = X; keypoints.body.y = Y
             this.attr({cx: X, cy: Y});
             path[1][1] = X; path[1][2] = Y;
+            path[4][1] = X; path[4][2] = Y;
             curve.attr({path: path});
-            console.log('X:' + Y + " Y: " + Y);
+            //console.log('X:' + Y + " Y: " + Y);
         }; 
         controls[2].update = function (x, y) {
             var X = this.attr("cx") + x, Y = this.attr("cy") + y;
+            keypoints.larm.x = X; keypoints.larm.y = Y
             this.attr({cx: X, cy: Y});
             path[2][1] = X; path[2][2] = Y;
             curve.attr({path: path});
-            console.log('X:' + X + " Y: " + Y);
+            //console.log('X:' + X + " Y: " + Y);
         };
         controls[3].update = function (x, y) {
             var X = this.attr("cx") + x, Y = this.attr("cy") + y;
+            keypoints.rarm.x = X; keypoints.rarm.y = Y
             this.attr({cx: X, cy: Y});
             path[3][1] = X; path[3][2] = X;
             curve.attr({path: path});
-            console.log('X:' + X + " Y: " + Y);
+           // console.log('X:' + X + " Y: " + Y);
         }; 
         controls[4].update = function (x, y) {
             var X = this.attr("cx") + x, Y = this.attr("cy") + y;
+            keypoints.tail.x = X; keypoints.tail.y = Y
             this.attr({cx: X, cy: Y});
-            path[4][1] = X; path[4][2] = Y;
+            path[5][1] = X; path[5][2] = Y;
+            path[8][1] = X; path[8][2] = Y;
             curve.attr({path: path});
-            console.log('X:' + X + " Y: " + Y);
+            //console.log('X:' + X + " Y: " + Y);
+        };
+        controls[5].update = function (x, y) {
+            var X = this.attr("cx") + x, Y = this.attr("cy") + y;
+            keypoints.larm.x = X; keypoints.larm.y = Y    
+            this.attr({cx: X, cy: Y});
+            path[6][1] = X; path[6][2] = Y;
+            curve.attr({path: path});
+            //console.log('X:' + X + " Y: " + Y);
+        };
+        controls[6].update = function (x, y) {
+            var X = this.attr("cx") + x, Y = this.attr("cy") + y;
+            keypoints.rarm.x = X; keypoints.rarm.y = Y
+            this.attr({cx: X, cy: Y});
+            path[7][1] = X; path[7][2] = Y;
+            curve.attr({path: path});
+            //console.log('X:' + X + " Y: " + Y);
+        };
+        controls[7].update = function (x, y) {
+            var X = this.attr("cx") + x, Y = this.attr("cy") + y;
+            keypoints.mtail.x = X; keypoints.mtail.y = Y
+            this.attr({cx: X, cy: Y});
+            path[9][1] = X; path[9][2] = Y;
+            curve.attr({path: path});
+            //console.log('X:' + X + " Y: " + Y);
         };
         controls.drag(move, up);
     } // end curve
@@ -267,17 +318,26 @@
         advance_frame(-1);
     });
 
-    // All the code that executes is here----------------
-    // This has to be stored in annotation variable
-    var headx = 329, heady = 341;
-    var larmx = 317, larmy = 409;
-    var llegx = 231, llegy = 430;
-    var rlegx = 265, rlegy = 440;
-    var rarmx = 310, rarmy = 460;
+    $('#gen_random_bttn').click(function() {
+        // generate a random puppet
+        if (!annotation[current_image-1].hasOwnProperty("data")){
+            annotation[current_image-1].data = [];
+        }     
+        var annotate = annotation[current_image-1].data;
+            
+        annotate.head = {x:280,y:240};
+        annotate.body = {x:280,y:260};
+        annotate.larm = {x:260,y:255};
+        annotate.rarm = {x:300,y:255};
+        annotate.lleg = {x:260,y:275};
+        annotate.rleg = {x:300,y:275};
+        annotate.tail = {x:280,y:280};
+        annotate.mtail = {x:280,y:290};
+        curve( annotate, "hsb(0, .75, .75)");
+        console.log('here');
+    });
+
     set_frame(1);
-    curve( headx, heady, larmx, larmy, llegx, llegy, rlegx, rlegy, rarmx, rarmy, "hsb(0, .75, .75)");
-
-
 
         // this should give you access to the precomputed flow.
         /* commenting it out for now as we are not using optical flow now- Umang 
