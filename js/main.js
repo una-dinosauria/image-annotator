@@ -42,7 +42,6 @@
     var show_image = true;
     var show_annotation = true;
     var annotation = {};        // This should contain image, flow, as well as annotations (coordinates); 
-                                // TODO: Define how should it contain  ---DONE
                                 // This is all the data we need to save or should be caring about.
                                 // Use of attributes seems the most plausible way
     
@@ -59,9 +58,9 @@
     
     var parts = ["head","body","larm","rarm","tail","lleg","rleg","mtail"];
     //showing different color on control points in different states
-    var control_color = {"click" : {fill: "#FF8000", stroke: "none"}, 
-                         "interp": {fill: "#FF0000", stroke: "none"},
-                        "default": {fill: "#FFFFFF", stroke: "none"}};   
+    var control_color = {"click" : {fill: "#FF8000", stroke: "none", opacity:0.5}, 
+                         "interp": {fill: "#FF0000", stroke: "none", opacity:0.5},
+                        "default": {fill: "#00FF80", stroke: "none", opacity:0.5}};   
     
     // preload all the images and flow; To avoid lags
     for (i=0; i<nimages; i++) {
@@ -75,15 +74,11 @@
     // create raphael element and show a fixed text
     r = Raphael("holder",annotation[0].img.width,annotation[0].img.height); 
 
-    discattr    = {fill: "#fff", stroke: "none"};
     // Note we have to keep track of every svg element we create so that we can reorder it. 
     txt_element = r.text(310, 20, "drag the points to change the curves").attr({fill: "#fff", "font-size": 16});
     txt_element.toFront();
-    // we don't need rectangle now... might need later
-    //r.rect(0, 0, 640, 480, 0).attr({stroke: "#666"});
     
     // This function handles drawing of svg and dragging 
-    // TODO: change it to handle a mouse
 
     function draw_puppet(keypoints, color) {
         // define lines
@@ -237,10 +232,10 @@
             this.attr(control_color["default"]); 
         });
         controls.mouseover(function(){
-            this.attr({r:10,opacity:0.25});
+            this.attr({r:10});
         });
         controls.mouseout(function(){
-            this.attr({r:5,opacity:1});
+            this.attr({r:5});
         });
         
     } // end curve
@@ -260,7 +255,9 @@
         img = annotation[current_image-1].img;
         r.clear(); 
         if (show_image){
-        r.image(img.src,0,0,img.width,img.height);
+            r.image(img.src,0,0,img.width,img.height);
+        }else{
+            r.rect(0,0,img.width,img.height,0).attr({stroke:'#666'});   
         }
         if (show_annotation){
             if (annotation[current_image-1].hasOwnProperty("data")){
@@ -310,11 +307,55 @@
         update_image();
     }
 
+    function flow_prediction(data){
+        var new_data = [];//annotation[current_image-1].data;
+        var img = new Image();
+        var c = document.createElement("canvas")
+        img.src = annotation[current_image-2].flow.src;  // note that flow for current image is in number 1 less than the image
+       // img.onload = function() {
+            c.width = img.width;
+            c.height = img.height;
+            var w = img.width, h = img.height;
+            var ctx = c.getContext("2d");
+            ctx.drawImage(img, 0, 0);
+            var idata = ctx.getImageData(0, 0, img.width, img.height);
+            var p     = idata.data;
+            var l;
+                        
+            l = (data.head.y*w + data.head.x) * 4;
+            new_data.head = {x:data.head.x+p[l+1]-128,y:data.head.y+p[l+2]-128};
+
+            l = (data.body.y*w + data.body.x) * 4;
+            new_data.body = {x:data.body.x+p[l+1]-128,y:data.body.y+p[l+2]-128};
+            
+            l = (data.larm.y*w + data.larm.x) * 4;
+            new_data.larm = {x:data.larm.x+p[l+1]-128,y:data.larm.y+p[l+2]-128};
+        
+            l = (data.rarm.y*w + data.rarm.x) * 4;
+            new_data.rarm = {x:data.rarm.x+p[l+1]-128,y:data.rarm.y+p[l+2]-128};
+            
+            l = (data.tail.y*w + data.tail.x) * 4;
+            new_data.tail = {x:data.tail.x+p[l+1]-128,y:data.tail.y+p[l+2]-128};
+
+            l = (data.lleg.y*w + data.lleg.x) * 4;
+            new_data.lleg = {x:data.lleg.x+p[l+1]-128,y:data.lleg.y+p[l+2]-128};
+
+            l = (data.rleg.y*w + data.rleg.x) * 4;
+            new_data.rleg = {x:data.rleg.x+p[l+1]-128,y:data.rleg.y+p[l+2]-128};
+                
+            l = (data.mtail.y*w + data.mtail.x) * 4;
+            new_data.mtail = {x:data.mtail.x+p[l+1]-128,y:data.mtail.y+p[l+2]-128};
+            console.log(new_data);
+        //}
+        return new_data;
+    }
+    
     $('#fwd_bttn').click(function () {
         advance_frame(1);
     });
 
     $('#play_bttn').click(function () {
+        //TODO: disable annotation buttons when playing
         $('#play_bttn').hide();
         $('#pause_bttn').show();
         play = window.setInterval(function() {
@@ -384,7 +425,34 @@
                 console.log('here');
             }
         }
-    });    
+    });   
+    
+    $('#use_flow_bttn').click(function() {
+        if (current_image == 1){
+            alert ("There is no previous frame");
+        }else{
+            if (!annotation[current_image-2].hasOwnProperty("data")){
+                alert('No annotation on previous image');
+            }else{
+                annotation[current_image-1].data = [];
+                annotation[current_image-1].data = flow_prediction(annotation[current_image-2].data);
+                var annotate = annotation[current_image-1].data;
+                console.log(annotate.head);
+                annotate.head.interp = true;
+                annotate.body.interp = true;
+                annotate.larm.interp = true;
+                annotate.rarm.interp = true;
+                annotate.lleg.interp = true;
+                annotate.rleg.interp = true;
+                annotate.tail.interp = true;
+                annotate.mtail.interp = true;
+                update_image();
+                console.log('here');
+            }
+
+        }
+        
+    }); 
 
     set_frame(1);
 
