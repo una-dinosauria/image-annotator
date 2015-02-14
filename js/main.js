@@ -42,6 +42,8 @@ var connection_color= {"head-body" : "hsb(.3, .75, .75)",
                        "tail-mtail": "hsb(.3, .75, .75)",
                        "mtail-etail":"hsb(.3, .75, .75)"};
 
+var center_point  = "body-tail";
+
 // assigned when using random generation, take care the order should be same as control_points
 var rand_coordinates ={};
     rand_coordinates.head = {x:240,y:240,interp:true};
@@ -109,6 +111,8 @@ function draw_puppet(keypoints, color) {
         connections.forEach( function (ele,idx){
             curve[ele].attr({path:path[ele]});
         });
+        var t = center_point.split("-");
+        center_control.attr({cx:(keypoints[t[0]].x+keypoints[t[1]].x)/2, cy: (keypoints[t[0]].y+keypoints[t[1]].y)/2});
     } 
     
     draw_connections();
@@ -119,23 +123,45 @@ function draw_puppet(keypoints, color) {
         controls.push(r.circle(keypoints[prop].x, keypoints[prop].y, 5).attr(attr));
         console.log(prop);
     }    
-    
+    var t = center_point.split("-");
+    center_control = r.circle( (keypoints[t[0]].x+keypoints[t[1]].x)/2, (keypoints[t[0]].y+keypoints[t[1]].y)/2, 5).attr(control_attr["default"]);
+
     // set control listeners for all the points. 
     // This is a perfect example of why people call js a devil
     var base_id = controls[0].id;
     for (var i=0; i < controls.length; i++){
         controls[i].update = function (x, y) {
             var X = this.attr("cx") + x, Y = this.attr("cy") + y;
-            console.log(this.id-base_id)
             keypoints[control_points[this.id-base_id]] = {x: X, y: Y, interp: false};
             this.attr({cx: X, cy: Y});
             this.attr(control_attr["default"]);
             redraw_connections();
         }
     }
+    
+    center_control.update = function (x,y){
+        var p=0
+        for (var prop in keypoints){
+            keypoints[prop] = {x: keypoints[prop].x+x, y: keypoints[prop].y+y, interp:false}    
+            controls[p].attr({cx:keypoints[prop].x, cy:keypoints[prop].y});
+            p=p+1;
+        } 
+        this.attr({cx: this.attr("cx")+x, cy: this.attr("cy")+y});
+        this.attr(control_attr["default"]);
+        redraw_connections();
+    }
      
     controls.drag(move, up);
+    center_control.drag(move,up);
     
+    center_control.mouseover(function() {
+        this.attr(control_attr["mouseover"]);
+    });
+    center_control.mouseout(function(){
+        this.attr(control_attr["default"]);
+    });    
+
+
     controls.mousedown(function () {
         this.attr(control_attr["mouseover"]); 
     });
