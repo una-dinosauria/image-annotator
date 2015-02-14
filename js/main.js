@@ -1,10 +1,11 @@
 /* General Notes: 
-        Note we take x as horizontal --- This has been the biggest confusion so far 
-        for me working with images 
-    attributes of annotation so far .. 
-        img --- image
-        flow
-        data
+*  Note we take x as horizontal --- This has been the biggest confusion so far 
+*  for me working with images 
+*
+*  attributes of annotation so far .. 
+    img
+    flow
+      data
             head        (head)
                 x
                 y
