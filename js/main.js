@@ -26,31 +26,33 @@ var FPS             = 10;               // Playing speed; TODO: Provide UI to ch
 // control_points are the keypoints
 // control_attr are the attributes applied to control points in different states. 
 // States are mouseover, interp (true), default (interp = false)
-var control_points  = ["head","body","larm","rarm","tail","lleg","rleg","mtail"];
+var control_points  = ["head","body","larm","rarm","tail","lleg","rleg","mtail","etail"];
 var control_attr    = {"mouseover"  : {fill: "#FF8000", stroke: "none", opacity:0.5, r:10},
                        "interp"     : {fill: "#FF0000", stroke: "none", opacity:0.5, r:5 },
                        "default"    : {fill: "#00FF80", stroke: "none", opacity:0.5, r:5}};
 
 // Connections is where to draw the line
-var connections     = ["head-body","body-larm","body-rarm","body-tail","tail-lleg","tail-rleg","tail-mtail"];
+var connections     = ["head-body","body-larm","body-rarm","body-tail","tail-lleg","tail-rleg","tail-mtail","mtail-etail"];
 var connection_color= {"head-body" : "hsb(.3, .75, .75)",
                        "body-larm" : "hsb(.6, .75, .75)",
                        "body-rarm" : "hsb(.1, .75, .75)",
                        "body-tail" : "hsb(.3, .75, .75)",
                        "tail-lleg" : "hsb(.6, .75, .75)",
                        "tail-rleg" : "hsb(.1, .75, .75)",
-                       "tail-mtail": "hsb(.3, .75, .75)"};
+                       "tail-mtail": "hsb(.3, .75, .75)",
+                       "mtail-etail":"hsb(.3, .75, .75)"};
 
+// assigned when using random generation, take care the order should be same as control_points
 var rand_coordinates ={};
     rand_coordinates.head = {x:240,y:240,interp:true};
     rand_coordinates.body = {x:240,y:280,interp:true};
     rand_coordinates.larm = {x:200,y:260,interp:true};
     rand_coordinates.rarm = {x:280,y:260,interp:true};
+    rand_coordinates.tail = {x:240,y:330,interp:true};
     rand_coordinates.lleg = {x:200,y:300,interp:true};
     rand_coordinates.rleg = {x:280,y:300,interp:true};
-    rand_coordinates.tail = {x:240,y:330,interp:true};
     rand_coordinates.mtail= {x:240,y:360,interp:true};
-
+    rand_coordinates.etail= {x:240,y:380,interp:true};
 // Beyond this no change should be required by the user
 var r;
 var play;                       // this is set to stop the playing when paused or stopped
@@ -115,6 +117,7 @@ function draw_puppet(keypoints, color) {
     for (var prop in keypoints){
         var attr = (keypoints[prop].interp)? control_attr["interp"]: control_attr["default"];
         controls.push(r.circle(keypoints[prop].x, keypoints[prop].y, 5).attr(attr));
+        console.log(prop);
     }    
     
     // set control listeners for all the points. 
@@ -123,6 +126,7 @@ function draw_puppet(keypoints, color) {
     for (var i=0; i < controls.length; i++){
         controls[i].update = function (x, y) {
             var X = this.attr("cx") + x, Y = this.attr("cy") + y;
+            console.log(this.id-base_id)
             keypoints[control_points[this.id-base_id]] = {x: X, y: Y, interp: false};
             this.attr({cx: X, cy: Y});
             this.attr(control_attr["default"]);
