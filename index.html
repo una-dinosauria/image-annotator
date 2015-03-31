@@ -61,10 +61,18 @@
                 <button id="use_flow_bttn" type="button" class="btn btn-default">
                 Use flow to copy previous annotation
                 </button>
+                <button id="dnld_annotation" type="button" class="btn btn-default">
+                Download Annotation
+                </button>
                 <form action="">
                     <input id="show_image_chkbox" type="checkbox" name="show_image" onchange="chkbox(this)" checked> show image
                     <input id="show_annotation_chkbox" type="checkbox" name="show_annotation" onchange="chkbox(this)" checked>show annotation 
+                
+                    <input id="download_type" type="radio" name="download_fmt" value="csv" > CSV
+                    <input id="download_type" type="radio" name="download_fmt" value="json" checked> JSON
                 </form>
+
+
 
 			</div>
 

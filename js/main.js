@@ -61,7 +61,7 @@ var play;                       // this is set to stop the playing when paused o
 var current_image   = 1;        // the image we are looking at
 var show_image      = true;
 var show_annotation = true;
-var annotation      = {};       
+var annotation      = [];       
 // Note for annotation variable : 
 // This should contain image, flow, as well as annotations (coordinates); 
 // This is all the data we need to save or should be caring about.
@@ -265,7 +265,51 @@ function chkbox(){
    
     update_image();
 }
-    
+
+// copied from
+// http://stackoverflow.com/questions/3665115/create-a-file-in-memory-for-user-to-download-not-through-server
+function download(filename, text) {
+  var pom = document.createElement('a');
+  pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+  pom.setAttribute('download', filename);
+
+  pom.style.display = 'none';
+  document.body.appendChild(pom);
+
+  pom.click();
+
+  document.body.removeChild(pom);
+}
+
+function annotation_to_csv(a){
+    return a.reduce(function(prev,cur,idx,arr) { 
+        var str="";
+        if (cur.data !== undefined ){
+            str=cur.img.src;
+            for (var i=0;i<control_points.length;i++){
+                str=str+" ,"+cur.data[control_points[i]].x+" ,"+cur.data[control_points[i]].y; 
+            }
+        }
+        return prev+"\n"+str;
+    }
+    ,"");
+}
+
+function annotation_to_json(a){
+    var temp={};
+    for (i=0;i<a.length;i++){
+        temp[i]={};
+        temp[i].src = a[i].img.src;
+        if (a[i].data !== undefined){
+            temp[i].data = {};
+            for (var p=0;p<control_points.length;p++){
+                temp[i].data[control_points[p]] = a[i].data[control_points[p]];
+            }
+        }
+    }
+    return JSON.stringify(temp);
+}
+   
 $('#fwd_bttn').click(function () {
     advance_frame(1);
 });
@@ -360,6 +404,18 @@ $('#use_flow_bttn').click(function() {
     }
 }); 
 
+$('#dnld_annotation').click(function() {
+    value = $("input[name=download_fmt]:checked").val();
+    if (value === "csv"){
+        save_string = annotation_to_csv(annotation);
+        download("data.txt", save_string);
+    }else if (value === "json"){
+        save_string = annotation_to_json(annotation);
+        download("data.txt", save_string);
+    }else{
+        alert("no download format selected");
+    }
+});    
 set_frame(1);
 
         // this should give you access to the precomputed flow.
