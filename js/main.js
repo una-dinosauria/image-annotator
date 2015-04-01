@@ -309,12 +309,8 @@ function annotation_to_json(a){
     }
     return JSON.stringify(temp);
 }
-   
-$('#fwd_bttn').click(function () {
-    advance_frame(1);
-});
 
-$('#play_bttn').click(function () {
+function play_frames(){
     $('#gen_random_bttn').prop('disabled', true);
     $('#copy_prev_bttn').prop('disabled',true);
     $('#use_flow_bttn').prop('disabled',true);
@@ -326,50 +322,48 @@ $('#play_bttn').click(function () {
         advance_frame(1);
         if (current_image == nimages){
             window.clearInterval(play);
+            play = undefined;
             $('#gen_random_bttn').prop('disabled', false);
             $('#copy_prev_bttn').prop('disabled',false);
             $('#use_flow_bttn').prop('disabled',false);
         }
     },1000/FPS);
-});
-
-$('#pause_bttn').click(function () {
+}
+function pause_frames(){
     $('#gen_random_bttn').prop('disabled', false);
     $('#copy_prev_bttn').prop('disabled',false);
     $('#use_flow_bttn').prop('disabled',false);
     $('#play_bttn').show();
     $('#pause_bttn').hide();
     window.clearInterval(play);
-});
+            play = undefined;
+}
 
-$('#stop_bttn').click(function () {
+function stop_frames(){
     window.clearInterval(play);
+            play = undefined;
     $('#gen_random_bttn').prop('disabled', false);
     $('#copy_prev_bttn').prop('disabled',false);
     $('#use_flow_bttn').prop('disabled',false);
     $('#play_bttn').show();
     $('#pause_bttn').hide();
     set_frame(1);
-});
+}
 
-$('#back_bttn').click( function() {
-    advance_frame(-1);
-});
+function gen_rand_annotation(){
+    // generate a random puppet
+    if (!annotation[current_image-1].hasOwnProperty("data")){
+        annotation[current_image-1].data = [];
+    }     
+    var annotate = annotation[current_image-1].data;
+    for (var prop in rand_coordinates){
+        annotate[prop] ={x: rand_coordinates[prop].x, y: rand_coordinates[prop].y, interp: true}; 
+    }
+    update_image();
+    console.log('here');
+}
 
-$('#gen_random_bttn').click(function() {
-        // generate a random puppet
-        if (!annotation[current_image-1].hasOwnProperty("data")){
-            annotation[current_image-1].data = [];
-        }     
-        var annotate = annotation[current_image-1].data;
-        for (var prop in rand_coordinates){
-            annotate[prop] ={x: rand_coordinates[prop].x, y: rand_coordinates[prop].y, interp: true}; 
-        }
-        update_image();
-        console.log('here');
-});
-        
-$('#copy_prev_bttn').click(function() {
+function copy_annotation(){
     //copy previous annotation
     if (current_image == 1){
         raise_error("There is no previous frame");       
@@ -385,9 +379,9 @@ $('#copy_prev_bttn').click(function() {
         update_image();
         }
     }
-});   
-    
-$('#use_flow_bttn').click(function() {
+}
+
+function copy_with_flow(){
     if (current_image == 1){
         raise_error ("There is no previous frame");
     }else{
@@ -402,9 +396,9 @@ $('#use_flow_bttn').click(function() {
             update_image();
         }
     }
-}); 
+}
 
-$('#dnld_annotation').click(function() {
+function download_annotation(){
     value = $("input[name=download_fmt]:checked").val();
     if (value === "csv"){
         save_string = annotation_to_csv(annotation);
@@ -415,7 +409,95 @@ $('#dnld_annotation').click(function() {
     }else{
         alert("no download format selected");
     }
-});    
+}
+
+$('#fwd_bttn').click(function () {
+    advance_frame(1);
+});
+
+$('#play_bttn').click(function () {
+    play_frames();
+});
+
+$('#pause_bttn').click(function () {
+    pause_frames();
+});
+
+$('#stop_bttn').click(function () {
+    stop_frames(); 
+});
+
+$('#back_bttn').click( function() {
+    advance_frame(-1);
+});
+
+$('#gen_random_bttn').click(function() {
+    gen_rand_annotation();
+});
+        
+$('#copy_prev_bttn').click(function() {
+    copy_annotation();
+});   
+    
+$('#use_flow_bttn').click(function() {
+    copy_with_flow();
+}); 
+
+$('#dnld_annotation').click(function() {
+    download_annotation();
+});   
+
+$(document).keydown(function(e){
+    switch (e.which){
+        case 37: //left
+                advance_frame(-1);
+                break;
+        case 39: //right
+                advance_frame(1);
+                break;
+        case 32: //space
+                if (e.ctrlKey){
+                    advance_frame(-1);
+                }else{
+                    advance_frame(1);
+                }
+                break;
+        case 67: //ctrl+c   
+                if (e.ctrlKey){
+                    copy_annotation();
+                }
+                break;
+        case 70: //f
+                if (e.ctrlKey){
+                    copy_with_flow();
+                }
+                break;
+        case 82: //r
+                if (e.ctrlKey){
+                $('#gen_random_bttn').click();
+                }
+                break;
+        case 83: //s
+                if (e.ctrlKey){
+                    download_annotation();
+                }
+                break;
+        case 80: if (play===undefined){  
+                    $('#play_bttn').click();
+                }else {
+                    $('#pause_bttn').click();
+                }
+                break;
+        case 65:
+                if (e.ctrlKey){
+                    $('#stop_bttn').click();
+                }
+                break;
+        default: return;
+    }
+    e.preventDefault();
+});
+ 
 set_frame(1);
 
         // this should give you access to the precomputed flow.
