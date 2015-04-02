@@ -10,6 +10,7 @@ progressing]
 + Puppet has to be color-coded so that one can differentiate between automatically generated key-point and human
 tagged key-point. Also there has to be a button so that user can say that the puppet is OK or well-tagged and can be
 used for interpolation (We decided to have a button or marker for this roughly at the center of mass of puppet)
-+ A help guide to be shown at the side or some other way to guide the user.
++ ~~A help guide to be shown at the side or some other way to guide the user.~~
++ Sample annotations
 + Restructuring the code
 
