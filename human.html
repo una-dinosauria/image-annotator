@@ -71,6 +71,10 @@
                     <input id="download_type" type="radio" name="download_fmt" value="csv" > CSV
                     <input id="download_type" type="radio" name="download_fmt" value="json" checked> JSON
                 </form>
+                <form>
+                    Enter no of frame to copy/interpolate annotations
+                    <input id="copy_num" type="number" name="quantity" min="1" max="10">
+                </form>
 
 
 
@@ -109,8 +113,8 @@
 		<!-- raphael-js for svg on canvas -->
 		<script src="js/raphael-min.js"></script>
         <!-- Here we put all the controls --> 
+		<!--script src="js/mouse.js"></script-->
 		<script src="js/human.js"></script>
-		<script src="js/main.js"></script>
 
 
 

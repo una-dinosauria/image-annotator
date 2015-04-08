@@ -197,7 +197,7 @@ function draw_puppet(keypoints, color) {
             look_ahead++;
         }
         if (look_ahead < nimages && annotation[look_ahead].hasOwnProperty("data") ){
-            console.log("cont");        
+            //console.log("cont");        
         }else{
             look_ahead--;
         }
@@ -222,7 +222,7 @@ function draw_puppet(keypoints, color) {
                 && annotation[look_back].data[prop].interp===true){
             look_back--;
         }
-        console.log(look_back);
+        //console.log(look_back);
         if (look_back > -1 && annotation[look_back].hasOwnProperty("data") 
             && annotation[look_back].data[prop].interp===false ){        //interpolate...
             var x_inc = annotation[look_back].data[prop].x - annotation[current_image-1].data[prop].x ;
@@ -464,9 +464,9 @@ function copy_annotation(){
                     annotate[prop].interp = true;
                 }
             }
-        update_image();
         }
     }
+    update_image();
 }
 
 function copy_with_flow(){
@@ -488,9 +488,9 @@ function copy_with_flow(){
                     annotate[prop].interp = true;
                 }
             }
-            update_image();
         }
     }
+    update_image();
 }
 
 function download_annotation(){
