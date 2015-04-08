@@ -2,9 +2,9 @@
 
 After talk with Ankur, we decided following features:
 + ~~Puppet has to be color-coded so that one can differentiate between automatically generated key-point and human~~
-+ ~Interpolation~ --- ~Linear~ and ~flow based~.
-~[Flow based interpolation for multiple frames will be done by interpolating between neighboring frames at a time and
-progressing]~
++ ~~Interpolation~~ --- ~~Linear~~ and ~~flow based~~.
+~~[Flow based interpolation for multiple frames will be done by interpolating between neighboring frames at a time and
+progressing]~~
 + ~~Keyboard based navigation~~ & ~~downloading annotations~~
 + ~~Tagged key-point. Also there has to be a button so that user can say that the puppet is OK or well-tagged and can be
 used for interpolation (We decided to have a button or marker for this roughly at the center of mass of puppet)~~
