@@ -1,4 +1,3 @@
-        
 /* 
 *   Global Variables
 *  All the variables the user need to set should be on the top
@@ -16,6 +15,11 @@ var control_attr    = {"mouseover"  : {fill: "#FF8000", stroke: "none", opacity:
                        "interp"     : {fill: "#FF0000", stroke: "none", opacity:0.5, r:5 },
                        "default"    : {fill: "#00FF80", stroke: "none", opacity:0.5, r:5}};
 
+var center_control_attr = {"mouseover"  : {fill: "#FF0000", stroke: "none", opacity:0.5, r:10},
+                           "interp"     : {fill: "#00FF00", stroke: "none", opacity:0.5, r:5 },
+                       	   "default"    : {fill: "#0000FF", stroke: "none", opacity:0.5, r:5}};
+
+
 // Connections is where to draw the line
 var connections     =  ["head-neck","neck-lsh","neck-rsh","lsh-larm","rsh-rarm","larm-lwr","rarm-rwr","ltor-lknee","rtor-rknee","lknee-lleg","rknee-rleg"];
 var connection_color= {"head-neck" : "hsb(.3, .75, .75)",
@@ -28,8 +32,9 @@ var connection_color= {"head-neck" : "hsb(.3, .75, .75)",
                        "ltor-lknee": "hsb(.3, .75, .75)",
                        "rtor-rknee": "hsb(.6, .75, .75)",
                        "lknee-lleg": "hsb(.3, .75, .75)",
-                       "rknee-rleg": "hsb(.6, .75, .75)" };
+                       "rknee-rleg": "hsb(.6, .75, .75)"};
 
+//center point will be average of whatever control points we write in center_point seperated by "-"
 var center_point  = "neck-ltor";
     
 // assigned when using random generation, take care the order should be same as control_points
@@ -47,14 +52,14 @@ var rand_coordinates ={};
     rand_coordinates.lknee= {x:220,y:360,interp:true};
     rand_coordinates.rknee= {x:260,y:360,interp:true};
     rand_coordinates.lleg = {x:220,y:390,interp:true};
-    rand_coordinates.rleg= {x:260,y:390,interp:true};
+    rand_coordinates.rleg = {x:260,y:390,interp:true};
 // Beyond this no change should be required by the user
 
 
 
-var r;
+var r;							// raphael element
 var play;                       // this is set to stop the playing when paused or stopped
-var current_image   = 1;        // the image we are looking at
+var current_image   = 0;        // the image we are looking at; the first one starts from zero #assumption
 var show_image      = true;
 var show_annotation = true;
 var annotation      = [];       
@@ -66,9 +71,9 @@ var annotation      = [];
 for (i=0; i<nimages; i++) {
     annotation[i]           = [];
     annotation[i].img       = new Image();
-    annotation[i].img.src   = sprintf( img_path, [i+1] );  // name of the image file.
     annotation[i].flow      = new Image();
-    annotation[i].flow.src  = sprintf( flow_path, [i+1]);  // name of flow file
+//    annotation[i].flow.src  = sprintf( flow_path, [i+1]);  // name of flow file
+//    annotation[i].img.src   = sprintf( img_path, [i+1] );  // name of the image file.
 }
         
 // create raphael element 
@@ -81,9 +86,9 @@ r = Raphael("holder",annotation[0].img.width,annotation[0].img.height);
 // This function handles drawing of svg and dragging 
 // Input : keypoints  is an array similar to data array in annotation
 function draw_puppet(keypoints, color) {
-    
+
 // We draw all the line by moving(M) and drawing a line (L)
-    //function to generate path arrays
+//function to generate path arrays
     function gen_path_array(str1,str2){
         return ["M", keypoints[str1].x, keypoints[str1].y, "L", keypoints[str2].x, keypoints[str2].y];
     }
@@ -108,6 +113,7 @@ function draw_puppet(keypoints, color) {
             curve[ele].attr({path:path[ele]});
         });
         var t = center_point.split("-");
+		//ToDo: support multiple splits. 
         center_control.attr({cx:(keypoints[t[0]].x+keypoints[t[1]].x)/2, cy: (keypoints[t[0]].y+keypoints[t[1]].y)/2});
     } 
     
@@ -120,7 +126,7 @@ function draw_puppet(keypoints, color) {
         //console.log(prop);
     }    
     var t = center_point.split("-");
-    center_control = r.circle( (keypoints[t[0]].x+keypoints[t[1]].x)/2, (keypoints[t[0]].y+keypoints[t[1]].y)/2,5).attr(control_attr["interp"]);
+    center_control = r.circle( (keypoints[t[0]].x+keypoints[t[1]].x)/2,(keypoints[t[0]].y+keypoints[t[1]].y)/2,5).attr(center_control_attr["interp"]);
 
     // set control listeners for all the points. 
     // This is a perfect example of why people call js a devil
@@ -133,6 +139,7 @@ function draw_puppet(keypoints, color) {
             this.attr(control_attr["default"]);
             redraw_connections();
             
+		center_control.attr(center_control_attr["default"]);
         }
     }
     
@@ -152,15 +159,15 @@ function draw_puppet(keypoints, color) {
     center_control.drag(move,up);
     
     center_control.mouseover(function() {
-        this.attr(control_attr["mouseover"]);
+        this.attr(center_control_attr["mouseover"]);
     });
     center_control.mousedown(function () {
         center_control.update(0,0);                     //set all interp to false
-        this.attr(control_attr["mouseover"]); 
+        this.attr(center_control_attr["mouseover"]); 
     });
 
     center_control.mouseup(function(){
-        this.attr (control_attr["default"]);  
+        this.attr (center_control_attr["default"]);  
     });
 
     center_control.mouseout(function(){
@@ -168,7 +175,7 @@ function draw_puppet(keypoints, color) {
         for (var prop in keypoints){
             check = check & keypoints[prop].interp;
         }
-        var attr = check ? control_attr["interp"]: control_attr["default"];    
+        var attr = check ? center_control_attr["interp"]: center_control_attr["default"];    
         this.attr(attr);
     });    
 
@@ -255,19 +262,19 @@ function up() {
     
 // updates the frame 
 function update_image() {
-    img = annotation[current_image-1].img;
-    //r.clear(); 
-    show_image ? r.image(img.src,0,0,img.width,img.height) : r.rect(0,0,img.width,img.height,0).attr({stroke:'#666'});   
-    
-    if (show_annotation){
-        if (annotation[current_image-1].hasOwnProperty("data")){
-            var annotate = annotation[current_image-1].data;
-            draw_puppet(annotate);
-        }
-    }
-    
+    annotation[current_image].img.onload = function(){
+						console.log(this.src, this.width,this.height);
+						show_image ? r.image(this.src,0,0,this.width,this.height) : r.rect(0,0,this.width,this.height,0).attr({stroke:'#666'});   
+        				if (show_annotation){
+    	    				if (annotation[current_image].hasOwnProperty("data")){
+            					var annotate = annotation[current_image].data;
+            					draw_puppet(annotate);
+        					}
+    					}
+    				}
     var new_text = sprintf('you are currently on frame %d / %d', current_image, nimages);
     $('#info-text').text( new_text ); // update the text at the top
+	annotation[current_image].img.src = sprintf( img_path, [i] );
 }
 
 // set frame no to frame_no
