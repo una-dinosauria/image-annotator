@@ -274,7 +274,7 @@ function update_image() {
     				}
     var new_text = sprintf('you are currently on frame %d / %d', current_image, nimages);
     $('#info-text').text( new_text ); // update the text at the top
-	annotation[current_image].img.src = sprintf( img_path, [i] );
+	annotation[current_image].img.src = sprintf( img_path, [current_image] );
 }
 
 // set frame no to frame_no
