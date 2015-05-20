@@ -374,7 +374,7 @@ function flow_prediction(predict_from,callback){
                 new_data[prop] = {x:data[prop].x+p[l+1]-128,y:data[prop].y+p[l+2]-128};
             }
             console.log("copying")
-            console.log(new_data)
+            console.log(new_data,predict_from+1)
             callback(new_data);
         }
    //  image.crossOrigin="Anonymous";
@@ -399,8 +399,8 @@ function copy_with_flow(){
             }
             for (var i = current_image+1; i<=current_image+copy_num && i<nimages; i++){
                 annotation[i] = [];    
-                annotation[i].data=[];
-                flow_prediction(i-1,function(data){
+                ;
+                flow_prediction(i-1,function(data,i){
                                         console.log(i);
                                         annotation[i].data = data;
                                         var annotate = annotation[i].data;
