@@ -18,7 +18,8 @@ used for interpolation (We decided to have a button or marker for this roughly a
 # After call on 26/4
 ## Remaining (Important, Nice to have, Quick Fixes)
 + ~~Loading images on demand.~~
-	+ fix flow image issue
+	+ fix flow image issue -- CORS problem
+	Note: This problem comes when locally loading the pages. 
 + Deletion of annotations. Handling it gracefully for neighboring frames.
 + There would be two cases here. If you delete a user touched pointed or automatically generated point.
 + When you modify the annotation on nth frame the interpolations should get updated for all the automatically tagged

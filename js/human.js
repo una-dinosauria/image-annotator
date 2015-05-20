@@ -374,6 +374,7 @@ function flow_prediction(predict_from,callback){
                 new_data[prop] = {x:data[prop].x+p[l+1]-128,y:data[prop].y+p[l+2]-128};
             }
             console.log("copying")
+            console.log(new_data)
             callback(new_data);
         }
    //  image.crossOrigin="Anonymous";
