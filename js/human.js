@@ -399,7 +399,7 @@ function copy_with_flow(){
             }
             for (var i = current_image+1; i<=current_image+copy_num && i<nimages; i++){
                 annotation[i] = [];    
-                
+                annotation[i].data=[];
                 flow_prediction(i-1,function(data){
                                         console.log(i);
                                         annotation[i].data = data;
