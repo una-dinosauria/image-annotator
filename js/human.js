@@ -401,6 +401,7 @@ function copy_with_flow(){
                 annotation[i] = [];    
                 
                 flow_prediction(i-1,function(data){
+                                        console.log(i);
                                         annotation[i].data = data;
                                         var annotate = annotation[i].data;
                                         for (var prop in  annotate){
