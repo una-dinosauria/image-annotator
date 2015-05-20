@@ -10,81 +10,96 @@
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
 		<!-- Optional theme -->
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css">
+	
+	<style>
+		.center {
+    		text-align: center;
+    	}
+    	.wrapper {
+		    width: 1005px;
+		    margin: 0 auto;
+		    padding: 0;
+		    overflow: auto;
+		}
+	</style>
+
 	<body>
-		<header style="height:20px">
-		</header>
-		<center>
+		<header style="height:10px"> </header>
+		
+		<div class="center">
+			<h3 id="info-text">xyx/ 100</h3>
+		</div>
+			
+		<div class="center" style="position: absolute; width: 100%;"> 
+			<img id="image" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);margin: 0 auto;"
+				x="0" y="0" width="640" height="480" src="" onload="image_loaded();">
+		</div>
 
-			<div>
-                <h1> Hi hello</h1>
-				<p>Bored of looking at mouse, watch some human in action. <a href="human.html">[Click here]</a></p>
-			</div>
+		<div class="center" id="holder" style="overflow: hidden; position: relative; left: -0.5px;">
+		</div>
+			
+		<div class="center" style="position:relative;" class="btn-group" role="group" aria-label="..." container: 'body'>
+			<button id="back_bttn" type="button" class="btn btn-default" 
+				data-toggle="tooltip" data-placement="left" data-original-title="Go one frame back">
+				<span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+			</button>
+		
+			<button id="play_bttn" type="button" class="btn btn-default"
+				data-toggle="tooltip" data-placement="bottom" data-original-title="play">
+				<span class="glyphicon glyphicon-play" aria-hidden="true"></span>
+			</button>
+		
+			<button id="pause_bttn" type="button" class="btn btn-default" style="display:none"
+				data-toggle="tooltip" data-placement="bottom" data-original-title="pause">
+				<span class="glyphicon glyphicon-pause" aria-hidden="true"></span>
+			</button>
+		
+			<button id="stop_bttn" type="button" class="btn btn-default"
+				data-toggle="tooltip" data-placement="bottom" data-original-title="stop">
+				<span class="glyphicon glyphicon-stop" aria-hidden="true"></span>
+			</button>
+		
+			<button id="fwd_bttn" type="button" class="btn btn-default"
+				data-toggle="tooltip" data-placement="bottom" data-original-title="Go one frame forward">
+				<span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+			</button>
 
-			<div>
-				<p class="lead" id="info-text">xyx/ 100</p>
-			</div>
-			<!--<div id="container">-->
+		    <button id="random_bttn" type="button" class="btn btn-default"
+            	data-toggle="tooltip" data-placement="bottom" data-original-title="Generate Random Annotations">
+            	<span class="glyphicon glyphicon-random" aria-hidden="true"></span>
+            </button>
+            
+            <button id="copy_bttn" type="button" class="btn btn-default"
+            	data-toggle="tooltip" data-placement="bottom" data-original-title="Copy annotation to next frame">
+            	<span class="glyphicon glyphicon-transfer"> </span> copy 
+            </button>
+            
+            <button id="flow_bttn" type="button" class="btn btn-default"
+            	data-toggle="tooltip" data-placement="bottom" data-original-title="Copy annotation using optical flow">
+            	<span class="glyphicon glyphicon-transfer"></span> flow
+			</button>
+            
+            <button id="dnld_annotation" type="button" class="btn btn-default"
+            	data-toggle="tooltip" data-placement="right" data-original-title="Download annotations">
+            	<span class="glyphicon glyphicon-save" aria-hidden="true"></span>
+            </button>
+        </div>
+        
+    	<div>
+            <form action="">
+                <input id="show_image_chkbox" type="checkbox" name="show_image" onchange="chkbox(this)" checked> show image
+                <input id="show_annotation_chkbox" type="checkbox" name="show_annotation" onchange="chkbox(this)" checked>show annotation 
+            
+                <input id="download_type" type="radio" name="download_fmt" value="csv" > CSV
+                <input id="download_type" type="radio" name="download_fmt" value="json" checked> JSON
+            </form>
+            
+            <form>
+                Enter no of frame to copy/interpolate annotations
+                <input id="copy_num" type="number" name="quantity" min="1" max="10">
+            </form>
+		</div>
 
-				<!-- hidden canvas and image to conver images to matrices -->
-				<!--
-				<canvas id="hcanvas" width="640" height="400"></canvas>
-				<canvas id="hcanvas2" width="640" height="400"></canvas> -->
-
-				<div id="holder"></div>
-
-
-			<div class="btn-group" role="group" aria-label="...">
-				<button id="back_bttn" type="button" class="btn btn-default">
-					<span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
-				</button>
-				<button id="play_bttn" type="button" class="btn btn-default">
-					<span class="glyphicon glyphicon-play" aria-hidden="true"></span>
-				</button>
-				<button id="pause_bttn" type="button" class="btn btn-default" style="display:none">
-					<span class="glyphicon glyphicon-pause" aria-hidden="true"></span>
-				</button>
-				<button id="stop_bttn" type="button" class="btn btn-default">
-					<span class="glyphicon glyphicon-stop" aria-hidden="true"></span>
-				</button>
-				<button id="fwd_bttn" type="button" class="btn btn-default">
-					<span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
-				</button>
-
-                <!-- Generate a random annotation
-                    TODO: find a better button and place it a proper location-->
-                <button id="gen_random_bttn" type="button" class="btn btn-default">
-                Generate random puppet
-                </button>
-                <button id="copy_prev_bttn" type="button" class="btn btn-default">
-                Copy previous annotation
-                </button>
-                <button id="use_flow_bttn" type="button" class="btn btn-default">
-                Use flow to copy previous annotation
-                </button>
-                <button id="dnld_annotation" type="button" class="btn btn-default">
-                Download Annotation
-                </button>
-                <form action="">
-                    <input id="show_image_chkbox" type="checkbox" name="show_image" onchange="chkbox(this)" checked> show image
-                    <input id="show_annotation_chkbox" type="checkbox" name="show_annotation" onchange="chkbox(this)" checked>show annotation 
-                
-                    <input id="download_type" type="radio" name="download_fmt" value="csv" > CSV
-                    <input id="download_type" type="radio" name="download_fmt" value="json" checked> JSON
-                </form>
-                <form>
-                    Enter no of frame to copy/interpolate annotations
-                    <input id="copy_num" type="number" name="quantity" min="1" max="10">
-                </form>
-
-
-
-			</div>
-
-			<!--
-			<div id="holder"></div>
-			-->
-
-		</center>
 
 		<div>
             <h3> Keyboard Shortcuts</h3>
@@ -101,6 +116,7 @@
                 <ul> ctrl+s - Download annotation </ul>
             </li>
         </div>
+
         <!-- sprintf is super useful -->
 		<script src="js/sprintf.min.js"></script>
 		<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
@@ -116,10 +132,11 @@
 		<!--script src="js/mouse.js"></script-->
 		<script src="js/human.js"></script>
 
-
-
-
-
+		<!-- TODO : Wait for 2 sec before showing the tooltip-->
+		<script>
+			$(document).ready(function(){
+    			$('[data-toggle="tooltip"]').tooltip(); 
+			});
+		</script>
 	</body>
-
  </html>

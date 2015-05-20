@@ -2,14 +2,17 @@
 *   Global Variables
 *  All the variables the user need to set should be on the top
 */
-var img_path        = 'imgs/ixmas_daniel_cam1/img%04d.jpg';
-var flow_path       = 'flow/ixmas_daniel_cam1/img%04d.jpg';
+var img_path        = 'http://jltmtz.github.io/image-annotator/imgs/ixmas_daniel_cam1/img%04d.jpg';
+var flow_path       = 'http://jltmtz.github.io/image-annotator/flow/ixmas_daniel_cam1/img%04d.jpg';
 var nimages         = 500;              //TODO: This could be determined automatically    
 var FPS             = 10;               // Playing speed; TODO: Provide UI to change it
+var img_height      = 480;              // image height
+var img_width       = 640;              // image width
 
 // control_points are the keypoints
 // control_attr are the attributes applied to control points in different states. 
 // States are mouseover, interp (true), default (interp = false)
+// interp is interpolation
 var control_points  = ["head","neck","lsh","rsh","larm","rarm","lwr","rwr","ltor","rtor","lknee","rknee","lleg","rleg"];
 var control_attr    = {"mouseover"  : {fill: "#FF8000", stroke: "none", opacity:0.5, r:10},
                        "interp"     : {fill: "#FF0000", stroke: "none", opacity:0.5, r:5 },
@@ -19,8 +22,7 @@ var center_control_attr = {"mouseover"  : {fill: "#FF0000", stroke: "none", opac
                            "interp"     : {fill: "#00FF00", stroke: "none", opacity:0.5, r:5 },
                        	   "default"    : {fill: "#0000FF", stroke: "none", opacity:0.5, r:5}};
 
-
-// Connections is where to draw the line
+// Connections is where to draw the line to join the connections
 var connections     =  ["head-neck","neck-lsh","neck-rsh","lsh-larm","rsh-rarm","larm-lwr","rarm-rwr","ltor-lknee","rtor-rknee","lknee-lleg","rknee-rleg"];
 var connection_color= {"head-neck" : "hsb(.3, .75, .75)",
                        "neck-lsh"  : "hsb(.3, .75, .75)",
@@ -39,49 +41,38 @@ var center_point  = "neck-ltor";
     
 // assigned when using random generation, take care the order should be same as control_points
 var rand_coordinates ={};
-    rand_coordinates.head = {x:240,y:200,interp:true};
-    rand_coordinates.neck = {x:240,y:240,interp:true};
-    rand_coordinates.lsh  = {x:200,y:240,interp:true};
-    rand_coordinates.rsh  = {x:280,y:240,interp:true};
-    rand_coordinates.larm = {x:200,y:280,interp:true};
-    rand_coordinates.rarm = {x:280,y:280,interp:true};
-    rand_coordinates.lwr  = {x:200,y:320,interp:true};
-    rand_coordinates.rwr  = {x:280,y:320,interp:true};
-    rand_coordinates.ltor = {x:220,y:330,interp:true};
-    rand_coordinates.rtor = {x:260,y:330,interp:true};
-    rand_coordinates.lknee= {x:220,y:360,interp:true};
-    rand_coordinates.rknee= {x:260,y:360,interp:true};
-    rand_coordinates.lleg = {x:220,y:390,interp:true};
-    rand_coordinates.rleg = {x:260,y:390,interp:true};
+    rand_coordinates.head = {x:305,y:125,interp:true};
+    rand_coordinates.neck = {x:305,y:165,interp:true};
+    rand_coordinates.lsh  = {x:265,y:165,interp:true};
+    rand_coordinates.rsh  = {x:345,y:165,interp:true};
+    rand_coordinates.larm = {x:265,y:205,interp:true};
+    rand_coordinates.rarm = {x:345,y:205,interp:true};
+    rand_coordinates.lwr  = {x:265,y:245,interp:true};
+    rand_coordinates.rwr  = {x:345,y:245,interp:true};
+    rand_coordinates.ltor = {x:285,y:255,interp:true};
+    rand_coordinates.rtor = {x:325,y:255,interp:true};
+    rand_coordinates.lknee= {x:285,y:285,interp:true};
+    rand_coordinates.rknee= {x:325,y:285,interp:true};
+    rand_coordinates.lleg = {x:285,y:315,interp:true};
+    rand_coordinates.rleg = {x:325,y:315,interp:true};
 // Beyond this no change should be required by the user
 
-
-
-var r;							// raphael element
+var r;							// variable to hold raphael element
 var play;                       // this is set to stop the playing when paused or stopped
 var current_image   = 0;        // the image we are looking at; the first one starts from zero #assumption
 var show_image      = true;
 var show_annotation = true;
-var annotation      = [];       
-// Note for annotation variable : 
-// This should contain image, flow, as well as annotations (coordinates); 
-// This is all the data we need to save or should be caring about.
-    
-// preload all the images and flow; To avoid lags
-for (i=0; i<nimages; i++) {
-    annotation[i]           = [];
-    annotation[i].img       = new Image();
-    annotation[i].flow      = new Image();
-//    annotation[i].flow.src  = sprintf( flow_path, [i+1]);  // name of flow file
-//    annotation[i].img.src   = sprintf( img_path, [i+1] );  // name of the image file.
-}
-        
-// create raphael element 
-r = Raphael("holder",annotation[0].img.width,annotation[0].img.height); 
+var annotation      = []; 
 
-// Note we have to keep track of every svg element we create so that we can reorder it. 
-//txt_element = r.text(310, 20, "drag the points to change the curves").attr({fill: "#fff", "font-size": 16});
-//txt_element.toFront();
+// To have better play and pause functions; to wait for images to load. 
+var is_image_loaded = false;
+function image_loaded(){
+  is_image_loaded = true;
+}      
+
+// create raphael element 
+// we have to keep track of every svg element we create so that we can reorder it. 
+r = Raphael("holder",img_width,img_height); 
     
 // This function handles drawing of svg and dragging 
 // Input : keypoints  is an array similar to data array in annotation
@@ -259,75 +250,14 @@ function move(dx, dy) {
 function up() {
     this.dx = this.dy = 0;
 }
-    
-// updates the frame 
-function update_image() {
-    annotation[current_image].img.onload = function(){
-						console.log(this.src, this.width,this.height);
-						show_image ? r.image(this.src,0,0,this.width,this.height) : r.rect(0,0,this.width,this.height,0).attr({stroke:'#666'});   
-        				if (show_annotation){
-    	    				if (annotation[current_image].hasOwnProperty("data")){
-            					var annotate = annotation[current_image].data;
-            					draw_puppet(annotate);
-        					}
-    					}
-    				}
-    var new_text = sprintf('you are currently on frame %d / %d', current_image, nimages);
-    $('#info-text').text( new_text ); // update the text at the top
-	annotation[current_image].img.src = sprintf( img_path, [current_image] );
-}
 
-// set frame no to frame_no
-function set_frame( frame_no ) {
-    current_image  = frame_no;
-    update_image();
-}
 
-// moves ahead by no_of_frame --- can take negative no. and go back
-function advance_frame(no_of_frame){
-    var temp_current_image = current_image + no_of_frame;
-    if (temp_current_image > nimages){
-        current_image = nimages;
-    }else if (temp_current_image < 1){
-            current_image = 1;
-    }else{
-        current_image = temp_current_image;
-    }
-    update_image();
-    return ;
-}
+    
 
-// return a data structure like annotation.data, which has new coordinates as per optical flow 
-function flow_prediction(predict_from){
-    var new_data    = [];
-    var img         = new Image();
-    var c           = document.createElement("canvas")
-    //console.log(predict_from); 
-    img.src  = annotation[predict_from].flow.src;           // TODO: fix this numbering; rename the files
-                                                            // note that flow for current image is in number 1 less than the image
-    c.width  = img.width;
-    c.height = img.height;
-    
-    var w = img.width, h = img.height;
-    var ctx = c.getContext("2d");
-    ctx.drawImage(img, 0, 0);
-    
-    var idata = ctx.getImageData(0, 0, img.width, img.height);
-    var p     = idata.data;
-    var l;
-    var data = annotation[predict_from].data
-    for (var prop in data){
-        l = (data[prop].y*w + data[prop].x)*4;
-        new_data[prop] = {x:data[prop].x+p[l+1]-128,y:data[prop].y+p[l+2]-128};
-    }
-    return new_data;
-}
+
+
  
-// raise an error for the user 
-function raise_error(err_str){  
-    var err_el = r.text(r.width/2,20,err_str).attr({fill: "#FF0000", "font-size": 16});
-    err_el.animate({ opacity : 0 },3000,">",function () { });
-}
+
 
 function chkbox(){
     var img_chk = document.getElementById("show_image_chkbox");
@@ -383,117 +313,6 @@ function annotation_to_json(a){
     return JSON.stringify(temp);
 }
 
-function play_frames(){
-    $('#gen_random_bttn').prop('disabled', true);
-    $('#copy_prev_bttn').prop('disabled',true);
-    $('#use_flow_bttn').prop('disabled',true);
-   
-    $('#play_bttn').hide();
-    $('#pause_bttn').show();
-    
-    play = window.setInterval(function() {
-        advance_frame(1);
-        if (current_image == nimages){
-            window.clearInterval(play);
-            play = undefined;
-            $('#gen_random_bttn').prop('disabled', false);
-            $('#copy_prev_bttn').prop('disabled',false);
-            $('#use_flow_bttn').prop('disabled',false);
-        }
-    },1000/FPS);
-}
-function pause_frames(){
-    $('#gen_random_bttn').prop('disabled', false);
-    $('#copy_prev_bttn').prop('disabled',false);
-    $('#use_flow_bttn').prop('disabled',false);
-    $('#play_bttn').show();
-    $('#pause_bttn').hide();
-    window.clearInterval(play);
-            play = undefined;
-}
-
-function stop_frames(){
-    window.clearInterval(play);
-            play = undefined;
-    $('#gen_random_bttn').prop('disabled', false);
-    $('#copy_prev_bttn').prop('disabled',false);
-    $('#use_flow_bttn').prop('disabled',false);
-    $('#play_bttn').show();
-    $('#pause_bttn').hide();
-    set_frame(1);
-}
-
-function gen_rand_annotation(){
-    // generate a random puppet
-    if (!annotation[current_image-1].hasOwnProperty("data")){
-        annotation[current_image-1].data = [];
-    }     
-    var annotate = annotation[current_image-1].data;
-    for (var prop in rand_coordinates){
-        annotate[prop] ={x: rand_coordinates[prop].x, y: rand_coordinates[prop].y, interp: true}; 
-    }
-    update_image();
-    //console.log('here');
-}
-
-function get_copy_num(){
-    var ret = document.getElementById('copy_num').value;
-    if (isNaN(ret)|| ret===""){
-        return 1;
-    }else{
-        return Number(ret);
-    }
-    return 1;
-}
-function copy_annotation(){
-    //copy previous annotation
-    if (current_image == nimages){
-        raise_error("There are no more frames ahead");       
-    }else{
-        if (!annotation[current_image-1].hasOwnProperty("data")){
-            raise_error('No annotation to copy');
-        }else{
-            var copy_num = get_copy_num();
-            var annotate = annotation[current_image-1].data;
-            for (var prop in annotate){
-                annotate[prop].interp = false;
-            }
-            for (var i = current_image; i<current_image+copy_num && i<nimages; i++){
-                annotation[i].data = jQuery.extend(true,{},annotation[current_image-1].data);
-                var annotate = annotation[i].data;
-                for (var prop in  annotate){
-                    annotate[prop].interp = true;
-                }
-            }
-        }
-    }
-    update_image();
-}
-
-function copy_with_flow(){
-    if (current_image == nimages){
-        raise_error ("There are no more frames ahead");
-    }else{
-        if (!annotation[current_image-1].hasOwnProperty("data")){
-            raise_error ('No annotation to copy');
-        }else{
-            var copy_num = get_copy_num();
-            var annotate = annotation[current_image-1].data;
-            for (var prop in annotate){
-                annotate[prop].interp = false;
-            }
-            for (var i = current_image; i<current_image+copy_num && i<nimages; i++){
-                annotation[i].data = flow_prediction(i-1);
-                var annotate = annotation[i].data;
-                for (var prop in  annotate){
-                    annotate[prop].interp = true;
-                }
-            }
-        }
-    }
-    update_image();
-}
-
 function download_annotation(){
     value = $("input[name=download_fmt]:checked").val();
     if (value === "csv"){
@@ -506,6 +325,214 @@ function download_annotation(){
         alert("no download format selected");
     }
 }
+
+
+
+
+
+function get_copy_num(){
+    var ret = document.getElementById('copy_num').value;
+    if (isNaN(ret)|| ret===""){
+        return 1;
+    }else{
+        return Number(ret);
+    }
+    return 1;
+}
+
+// raise an error for the user and show it for t secs
+function raise_error(err_str, t){  
+    var err_el = r.text(r.width/2,20,err_str).attr({fill: "#FFFF00", "font-size": 20});
+    err_el.animate({ opacity : 0 },t*1000,">",function () { });
+}
+
+// return a data structure like annotation.data, which has new coordinates as per optical flow 
+// note that flow between x & x+1 is stored in x
+function flow_prediction(predict_from,callback){
+    var img         = new Image();
+    var c           = document.createElement("canvas")
+    var ctx         = c.getContext("2d");
+
+    
+    img.onload      = function(){
+            var new_data    = [];
+    
+            c.width  = this.width;
+            c.height = this.height;
+    
+            var w    = this.width ;  
+            var h    = this.height;
+        
+            ctx.drawImage(this, 0, 0);
+            
+            var idata = ctx.getImageData(0, 0, this.width, this.height);
+            var p     = idata.data;
+            var l;
+            var data  = annotation[predict_from].data
+            for (var prop in data){
+                l = (data[prop].y*w + data[prop].x)*4;
+                new_data[prop] = {x:data[prop].x+p[l+1]-128,y:data[prop].y+p[l+2]-128};
+            }
+            console.log("copying")
+            callback(new_data);
+        }
+   //  image.crossOrigin="Anonymous";
+    if ( img.complete || img.complete === undefined ) {
+        img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+        img.src = sprintf( flow_path, [predict_from]);
+    }   
+   
+    img.src  = sprintf( flow_path, [predict_from]);
+    console.log(img.src)    
+}
+
+function copy_with_flow(){
+    if (current_image >= nimages-1){
+        raise_error ("There are no more frames ahead",5);
+    }else{
+        if (annotation.hasOwnProperty(current_image) && annotation[current_image].hasOwnProperty("data")){
+            var copy_num = get_copy_num();
+            var annotate = annotation[current_image].data;
+            for (var prop in annotate){
+                annotate[prop].interp = false;
+            }
+            for (var i = current_image+1; i<=current_image+copy_num && i<nimages; i++){
+                annotation[i] = [];    
+                
+                flow_prediction(i-1,function(data){
+                                        annotation[i].data = data;
+                                        var annotate = annotation[i].data;
+                                        for (var prop in  annotate){
+                                            annotate[prop].interp = true;
+                                        }
+                                    });
+            }
+            advance_frame(copy_num);
+        }else{
+            raise_error('No annotation to copy',5);
+        }
+    }
+}
+
+// copy previous annotation
+function copy_annotation(){
+    if (current_image >= nimages-1){
+        raise_error("There are no more frames ahead",5);       
+    }else{
+        if (annotation.hasOwnProperty(current_image) &&annotation[current_image].hasOwnProperty("data")){
+            var copy_num = get_copy_num();
+            var annotate = annotation[current_image].data;
+            for (var prop in annotate){
+                annotate[prop].interp = false;
+            }
+            for (var i = current_image+1; i<=current_image+copy_num && i<nimages; i++){
+                annotation[i]      = [];
+                console.log("copying to ",i)
+                annotation[i].data = jQuery.extend(true,{},annotation[current_image].data);
+                var annotate       = annotation[i].data;
+                for (var prop in  annotate){
+                    annotate[prop].interp = true;
+                }
+            }
+            advance_frame(copy_num);
+        }else{
+            raise_error('No annotation to copy',5);
+        }
+    }
+}
+ 
+// generate a random puppet
+function gen_rand_annotation(){
+    annotation[current_image] = [];
+    annotation[current_image].data = [];
+    var annotate = annotation[current_image].data;
+    for (var prop in rand_coordinates){
+        annotate[prop] ={x: rand_coordinates[prop].x, y: rand_coordinates[prop].y, interp: true}; 
+    }
+    update_image();
+}
+
+// Image display related functions
+// updates the frame 
+function update_image() {
+    r.clear();
+    $('#image').attr('src',sprintf( img_path, [current_image] )); 
+    var new_text = sprintf('You are currently on frame %d / %d', current_image+1, nimages);
+    $('#info-text').text( new_text ); // update the text at the top
+    if (show_annotation && annotation.hasOwnProperty(current_image) && annotation[current_image].hasOwnProperty("data")){
+            var annotate = annotation[current_image].data;
+            draw_puppet(annotate);
+    }    
+}
+
+// set frame no to frame_no
+function set_frame( frame_no ) {
+    current_image  = frame_no;
+    update_image();
+}
+
+// moves ahead by no_of_frame --- can take negative no. and go back
+function advance_frame(no_of_frame){
+    var temp_current_image = current_image + no_of_frame;
+    if (temp_current_image >= nimages){
+        current_image = nimages-1;
+    }else if (temp_current_image < 0){
+            current_image = 0;
+    }else{
+        current_image = temp_current_image;
+    }
+    update_image();
+    return ;
+}
+
+function play_frames(){
+    $('#random_bttn').prop('disabled', true);
+    $('#copy_bttn').prop('disabled',true);
+    $('#flow_bttn').prop('disabled',true);
+   
+    $('#play_bttn').hide();
+    $('#pause_bttn').show();
+    
+    play = window.setInterval(function() {
+        // if image is not loaded it do not advances & reattempts to load
+        if (is_image_loaded){
+            advance_frame(1);
+            is_image_loaded=false;
+        }else{
+            update_image();
+        }
+
+        if (current_image >= nimages-1){
+            window.clearInterval(play);
+            play = undefined;
+            $('#random_bttn').prop('disabled', false);
+            $('#copy_bttn').prop('disabled',false);
+            $('#flow_bttn').prop('disabled',false);
+        }
+    },1000/FPS);
+}
+
+function pause_frames(){
+    $('#random_bttn').prop('disabled', false);
+    $('#copy_bttn').prop('disabled',false);
+    $('#flow_bttn').prop('disabled',false);
+    $('#play_bttn').show();
+    $('#pause_bttn').hide();
+    window.clearInterval(play);
+    play = undefined;
+}
+
+function stop_frames(){
+    window.clearInterval(play);
+    play = undefined;
+    $('#random_bttn').prop('disabled', false);
+    $('#copy_bttn').prop('disabled',false);
+    $('#flow_bttn').prop('disabled',false);
+    $('#play_bttn').show();
+    $('#pause_bttn').hide();
+    set_frame(0);
+}
+
 
 $('#fwd_bttn').click(function () {
     advance_frame(1);
@@ -527,15 +554,15 @@ $('#back_bttn').click( function() {
     advance_frame(-1);
 });
 
-$('#gen_random_bttn').click(function() {
+$('#random_bttn').click(function() {
     gen_rand_annotation();
 });
         
-$('#copy_prev_bttn').click(function() {
+$('#copy_bttn').click(function() {
     copy_annotation();
 });   
     
-$('#use_flow_bttn').click(function() {
+$('#flow_bttn').click(function() {
     copy_with_flow();
 }); 
 
@@ -570,7 +597,7 @@ $(document).keydown(function(e){
                 break;
         case 82: //r
                 if (e.ctrlKey){
-                $('#gen_random_bttn').click();
+                $('#random_bttn').click();
                 }
                 break;
         case 83: //s
@@ -594,7 +621,7 @@ $(document).keydown(function(e){
     e.preventDefault();
 });
  
-set_frame(1);
+set_frame(0);
 
         // this should give you access to the precomputed flow.
         /* commenting it out for now as we are not using optical flow now- Umang 
@@ -623,3 +650,14 @@ set_frame(1);
             }
         }
         */
+/*
+for (i=0; i<nimages; i++) {
+    annotation[i]           = [];
+    annotation[i].img       = new Image();
+    annotation[i].flow      = new Image();
+    annotation[i].flow.src  = sprintf( flow_path, [i+1]);  // name of flow file
+    annotation[i].img.src   = sprintf( img_path, [i+1] );  // name of the image file.
+}
+*/        
+//txt_element = r.text(310, 20, "drag the points to change the curves").attr({fill: "#fff", "font-size": 16});
+//txt_element.toFront();

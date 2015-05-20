@@ -17,7 +17,8 @@ used for interpolation (We decided to have a button or marker for this roughly a
 
 # After call on 26/4
 ## Remaining (Important, Nice to have, Quick Fixes)
-+ Loading images on demand.
++ ~~Loading images on demand.~~
+	+ fix flow image issue
 + Deletion of annotations. Handling it gracefully for neighboring frames.
 + There would be two cases here. If you delete a user touched pointed or automatically generated point.
 + When you modify the annotation on nth frame the interpolations should get updated for all the automatically tagged
@@ -29,7 +30,7 @@ frames. (start showing the logs to user)
 + Setting up a mechanical-turk job.
 
 ## Minor:
-+ Generate random puppet at the center (it seems a bit out of frame).
++ ~~Generate random puppet at the center (it seems a bit out of frame).~~
 + Generate random puppet only if there is no user generated puppet available in the frame.
 + Change the button labels to something like “copy annotation to the next frame”.
 	Deactivate copy buttons if there are no annotations in the current frame.
