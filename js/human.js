@@ -2,8 +2,8 @@
 *   Global Variables
 *  All the variables the user need to set should be on the top
 */
-var img_path        = 'http://jltmtz.github.io/image-annotator/imgs/ixmas_daniel_cam1/img%04d.jpg';
-var flow_path       = 'http://jltmtz.github.io/image-annotator/flow/ixmas_daniel_cam1/img%04d.jpg';
+var img_path        = 'imgs/ixmas_daniel_cam1/img%04d.jpg';
+var flow_path       = 'flow/ixmas_daniel_cam1/img%04d.jpg';
 var nimages         = 500;              //TODO: This could be determined automatically    
 var FPS             = 10;               // Playing speed; TODO: Provide UI to change it
 var img_height      = 480;              // image height
@@ -37,7 +37,7 @@ var connection_color= {"head-neck" : "hsb(.3, .75, .75)",
                        "rknee-rleg": "hsb(.6, .75, .75)"};
 
 //center point will be average of whatever control points we write in center_point seperated by "-"
-var center_point  = "neck-ltor";
+var center_point  = "lsh-rsh-ltor-rtor";
     
 // assigned when using random generation, take care the order should be same as control_points
 var rand_coordinates ={};
@@ -104,8 +104,15 @@ function draw_puppet(keypoints, color) {
             curve[ele].attr({path:path[ele]});
         });
         var t = center_point.split("-");
-		//ToDo: support multiple splits. 
-        center_control.attr({cx:(keypoints[t[0]].x+keypoints[t[1]].x)/2, cy: (keypoints[t[0]].y+keypoints[t[1]].y)/2});
+	    var avg_x = 0, avg_y = 0;
+        for (var i=0;i<t.length;i++){
+            avg_x = avg_x + keypoints[t[i]].x ;
+            avg_y = avg_y + keypoints[t[i]].y ;     
+        }
+        avg_x = avg_x/t.length;
+        avg_y = avg_y/t.length;
+
+        center_control.attr({cx:avg_x, cy: avg_y});
     } 
     
     draw_connections();
@@ -117,7 +124,14 @@ function draw_puppet(keypoints, color) {
         //console.log(prop);
     }    
     var t = center_point.split("-");
-    center_control = r.circle( (keypoints[t[0]].x+keypoints[t[1]].x)/2,(keypoints[t[0]].y+keypoints[t[1]].y)/2,5).attr(center_control_attr["interp"]);
+    var avg_x = 0, avg_y = 0;
+    for (var i=0;i<t.length;i++){
+        avg_x = avg_x + keypoints[t[i]].x ;
+        avg_y = avg_y + keypoints[t[i]].y ;     
+    }
+    avg_x = avg_x/t.length;
+    avg_y = avg_y/t.length;
+    center_control = r.circle(avg_x,avg_y,5).attr(center_control_attr["interp"]);
 
     // set control listeners for all the points. 
     // This is a perfect example of why people call js a devil
@@ -146,18 +160,20 @@ function draw_puppet(keypoints, color) {
         redraw_connections();
     }
      
-    controls.drag(move, up);
     center_control.drag(move,up);
-    
+
+    // When mouse goes over it; just change the attr
     center_control.mouseover(function() {
         this.attr(center_control_attr["mouseover"]);
     });
+
+    // when mouse is pressed on central button;
     center_control.mousedown(function () {
-        center_control.update(0,0);                     //set all interp to false
         this.attr(center_control_attr["mouseover"]); 
     });
 
     center_control.mouseup(function(){
+        center_control.update(0,0);                     //set all interp to false
         this.attr (center_control_attr["default"]);  
     });
 
@@ -170,68 +186,87 @@ function draw_puppet(keypoints, color) {
         this.attr(attr);
     });    
 
+    controls.drag(move, up);
 
     controls.mousedown(function () {
         this.attr(control_attr["mouseover"]); 
     });
+    
     controls.mouseover(function(){
         this.attr(control_attr["mouseover"]);
     });
 
     controls.mouseup(function () {
         var prop = control_points[this.id-base_id];
-        var attr = (keypoints[prop].interp)? control_attr["interp"]: control_attr["default"];
-        this.attr(attr); 
+        keypoints[prop].interp = false; 
+        this.attr(control_attr["default"]);
+        
         //look ahead till interp==false or end -- linearly intepolate
-        var look_ahead = current_image+1;
-        while (look_ahead < nimages && annotation[look_ahead].hasOwnProperty("data")
-                && annotation[look_ahead].data[prop].interp===true){
+        var look_ahead = current_image+2;
+        while ( look_ahead < nimages && 
+                    annotation.hasOwnProperty(look_ahead) && 
+                    annotation[look_ahead].hasOwnProperty("data") && 
+                    annotation[look_ahead].data[prop].interp===true ){
             look_ahead++;
         }
-        if (look_ahead < nimages && annotation[look_ahead].hasOwnProperty("data") ){
+        if (look_ahead < nimages && 
+                annotation.hasOwnProperty(look_ahead) &&
+                annotation[look_ahead].hasOwnProperty("data") ){
             //console.log("cont");        
         }else{
             look_ahead--;
         }
             //interpolate...
-        if (annotation[look_ahead].hasOwnProperty("data")){
-            var x_inc = annotation[look_ahead].data[prop].x - annotation[current_image-1].data[prop].x ;
-            var y_inc = annotation[look_ahead].data[prop].y - annotation[current_image-1].data[prop].y ;
+          //  console.log(look_ahead);
+        if (annotation.hasOwnProperty(look_ahead) && annotation[look_ahead].hasOwnProperty("data")){
+          //  console.log("forward interpolation");
+            var x_inc = annotation[look_ahead].data[prop].x - annotation[current_image].data[prop].x ;
+            var y_inc = annotation[look_ahead].data[prop].y - annotation[current_image].data[prop].y ;
         
-            x_inc = x_inc/(look_ahead-current_image+1);
-            y_inc = y_inc/(look_ahead-current_image+1);
-            var x_init = annotation[current_image-1].data[prop].x;
-            var y_init = annotation[current_image-1].data[prop].y;
+            x_inc = x_inc/(look_ahead-current_image);
+            y_inc = y_inc/(look_ahead-current_image);
+            var x_init = annotation[current_image].data[prop].x;
+            var y_init = annotation[current_image].data[prop].y;
 
             for (var p = current_image; p < look_ahead; p++){
-                annotation[p].data[prop].x = x_init + x_inc*(p-current_image+1);
-                annotation[p].data[prop].y = y_init + y_inc*(p-current_image+1);
+                annotation[p].data[prop].x = x_init + x_inc*(p-current_image);
+                annotation[p].data[prop].y = y_init + y_inc*(p-current_image);
             }
         }
-        
-        var look_back = current_image-3;
-        while (look_back > -1 && annotation[look_back].hasOwnProperty("data")
-                && annotation[look_back].data[prop].interp===true){
+
+        var look_back = current_image-2;
+        while (look_back > -1 &&
+                    annotation.hasOwnProperty(look_ahead) &&
+                    annotation[look_back].hasOwnProperty("data") &&
+                    annotation[look_back].data[prop].interp===true){
             look_back--;
         }
-        ///console.log(look_back);
-        if (look_back > -1 && annotation[look_back].hasOwnProperty("data") 
-            && annotation[look_back].data[prop].interp===false ){        //interpolate...
-            var x_inc = annotation[look_back].data[prop].x - annotation[current_image-1].data[prop].x ;
-            var y_inc = annotation[look_back].data[prop].y - annotation[current_image-1].data[prop].y ;
 
-            x_inc = x_inc/(look_back-current_image+1);
-            y_inc = y_inc/(look_back-current_image+1);
-            var x_init = annotation[current_image-1].data[prop].x;
-            var y_init = annotation[current_image-1].data[prop].y;
+        if (look_back > -1 && 
+            annotation.hasOwnProperty(look_back) &&
+            annotation[look_back].hasOwnProperty("data")) {
 
-            for (var p = current_image-2 ; p > look_back; p--){
-                annotation[p].data[prop].x = x_init + x_inc*(p-current_image+1);
-                annotation[p].data[prop].y = y_init + y_inc*(p-current_image+1);
+        }else{
+            look_back--;
+        }      
+
+      //  console.log(look_back);
+        if ( annotation.hasOwnProperty(look_back) && annotation[look_back].hasOwnProperty("data")){ 
+                  //interpolate...
+            //      console.log("backward interpolation")
+            var x_inc = annotation[look_back].data[prop].x - annotation[current_image].data[prop].x ;
+            var y_inc = annotation[look_back].data[prop].y - annotation[current_image].data[prop].y ;
+
+            x_inc = x_inc/(look_back-current_image);
+            y_inc = y_inc/(look_back-current_image);
+            var x_init = annotation[current_image].data[prop].x;
+            var y_init = annotation[current_image].data[prop].y;
+
+            for (var p = current_image ; p > look_back; p--){
+                annotation[p].data[prop].x = x_init + x_inc*(p-current_image);
+                annotation[p].data[prop].y = y_init + y_inc*(p-current_image);
             }
         }
-            //look back till interp == false --- linearly intepolate else chill
-       // console.log("Mouse up");
     });
     
     controls.mouseout(function(){
@@ -251,26 +286,7 @@ function up() {
     this.dx = this.dy = 0;
 }
 
-
-    
-
-
-
- 
-
-
-function chkbox(){
-    var img_chk = document.getElementById("show_image_chkbox");
-    img_chk.checked ? show_image = true : show_image = false;
-    
-    var annotation_chk = document.getElementById("show_annotation_chkbox");
-    annotation_chk.checked ? show_annotation = true : show_annotation = false;
-   
-    update_image();
-}
-
-// copied from
-// http://stackoverflow.com/questions/3665115/create-a-file-in-memory-for-user-to-download-not-through-server
+// copied from http://stackoverflow.com/questions/3665115/create-a-file-in-memory-for-user-to-download-not-through-server
 function download(filename, text) {
   var pom = document.createElement('a');
   pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
@@ -284,22 +300,24 @@ function download(filename, text) {
   document.body.removeChild(pom);
 }
 
+
 function annotation_to_csv(a){
-    return a.reduce(function(prev,cur,idx,arr) { 
-        var str="";
-        if (cur.data !== undefined ){
-            str=cur.img.src;
-            for (var i=0;i<control_points.length;i++){
-                str=str+" ,"+cur.data[control_points[i]].x+" ,"+cur.data[control_points[i]].y; 
-            }
-        }
-        return prev+"\n"+str;
+    var header = "filename";
+    for (var i=0;i<control_points.length;i++){
+        header=header+" ,"+control_points[i]+"_x ,"+control_points[i]+"_y"; 
     }
-    ,"");
+
+    return a.reduce(function(p,c){
+            str = c.filename; 
+            for (var i=0;i<control_points.length;i++){
+                str = str + " ," + c.data[control_points[i]].x + ", " + c.data[control_points[i]].y;
+            } 
+            return p+ "\n"+str;
+        },header);    
 }
 
 function annotation_to_json(a){
-    var temp={};
+    /* var temp={};
     for (i=0;i<a.length;i++){
         temp[i]={};
         temp[i].src = a[i].img.src;
@@ -309,27 +327,26 @@ function annotation_to_json(a){
                 temp[i].data[control_points[p]] = a[i].data[control_points[p]];
             }
         }
-    }
-    return JSON.stringify(temp);
+    } */
+    return JSON.stringify(a);
 }
 
+//invokes download of annotation
 function download_annotation(){
     value = $("input[name=download_fmt]:checked").val();
     if (value === "csv"){
         save_string = annotation_to_csv(annotation);
-        download("data.txt", save_string);
+        download("data.csv", save_string);
     }else if (value === "json"){
         save_string = annotation_to_json(annotation);
-        download("data.txt", save_string);
+        download("data.json", save_string);
     }else{
         alert("no download format selected");
     }
 }
 
-
-
-
-
+// returns the number of image annotations to be copied
+// read value from a form-feed
 function get_copy_num(){
     var ret = document.getElementById('copy_num').value;
     if (isNaN(ret)|| ret===""){
@@ -373,43 +390,53 @@ function flow_prediction(predict_from,callback){
                 l = (data[prop].y*w + data[prop].x)*4;
                 new_data[prop] = {x:data[prop].x+p[l+1]-128,y:data[prop].y+p[l+2]-128};
             }
-            console.log("copying")
-            console.log(new_data,predict_from+1)
-            callback(new_data);
+            callback(new_data,predict_from+1);
         }
-   //  image.crossOrigin="Anonymous";
+     //image.crossOrigin="anonymous";
     if ( img.complete || img.complete === undefined ) {
         img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
         img.src = sprintf( flow_path, [predict_from]);
     }   
    
-    img.src  = sprintf( flow_path, [predict_from]);
-    console.log(img.src)    
+    img.src  = sprintf( flow_path, [predict_from]);  
 }
 
+// use optical flow to copy the annotations
 function copy_with_flow(){
+    var limit = current_image+get_copy_num();
+    function set_flow_annotation (dat,index_to_set){
+        annotation[index_to_set] = {};
+        annotation[index_to_set].data = jQuery.extend(true,{},dat);
+        annotation[index_to_set].filename = sprintf ( img_path, [index_to_set] );
+        var annotate = annotation[index_to_set].data;
+        for (var prop in  annotate){
+            annotate[prop].interp = true;
+        }
+        if (index_to_set < nimages-1 && index_to_set < limit){
+            flow_prediction(index_to_set,set_flow_annotation)
+        }
+        advance_frame(1);
+    }
+
+
     if (current_image >= nimages-1){
         raise_error ("There are no more frames ahead",5);
     }else{
         if (annotation.hasOwnProperty(current_image) && annotation[current_image].hasOwnProperty("data")){
             var copy_num = get_copy_num();
             var annotate = annotation[current_image].data;
+            /* shoould not make it false
             for (var prop in annotate){
                 annotate[prop].interp = false;
             }
-            for (var i = current_image+1; i<=current_image+copy_num && i<nimages; i++){
-                annotation[i] = [];    
-                ;
-                flow_prediction(i-1,function(data,i){
-                                        console.log(i);
-                                        annotation[i].data = data;
-                                        var annotate = annotation[i].data;
-                                        for (var prop in  annotate){
-                                            annotate[prop].interp = true;
-                                        }
-                                    });
-            }
-            advance_frame(copy_num);
+            */
+            //for (var i = current_image+1; i<=current_image+copy_num && i<nimages; i++){
+            
+            //This is to circumvent the img.onload in flow_prediction function ; 
+            // because we can't return from it
+            //cant use a for loop here; again asynchronous call :'(
+            i = current_image;
+            flow_prediction(i,set_flow_annotation);
         }else{
             raise_error('No annotation to copy',5);
         }
@@ -424,19 +451,23 @@ function copy_annotation(){
         if (annotation.hasOwnProperty(current_image) &&annotation[current_image].hasOwnProperty("data")){
             var copy_num = get_copy_num();
             var annotate = annotation[current_image].data;
+            /* should not make it false
             for (var prop in annotate){
                 annotate[prop].interp = false;
             }
-            for (var i = current_image+1; i<=current_image+copy_num && i<nimages; i++){
-                annotation[i]      = [];
-                console.log("copying to ",i)
+            */
+            var limit = current_image+copy_num;
+            for (var i = current_image+1; i<=limit && i<nimages; i++){
+                annotation[i]      = {};
                 annotation[i].data = jQuery.extend(true,{},annotation[current_image].data);
                 var annotate       = annotation[i].data;
                 for (var prop in  annotate){
                     annotate[prop].interp = true;
                 }
+                annotation[i].filename = sprintf ( img_path, [i] );
+                advance_frame(1);
             }
-            advance_frame(copy_num);
+            //advance_frame(copy_num); coz advancing by 1 looks cool
         }else{
             raise_error('No annotation to copy',5);
         }
@@ -445,8 +476,9 @@ function copy_annotation(){
  
 // generate a random puppet
 function gen_rand_annotation(){
-    annotation[current_image] = [];
-    annotation[current_image].data = [];
+    annotation[current_image] = {};
+    annotation[current_image].data = {};
+    annotation[current_image].filename = sprintf ( img_path, [current_image] );
     var annotate = annotation[current_image].data;
     for (var prop in rand_coordinates){
         annotate[prop] ={x: rand_coordinates[prop].x, y: rand_coordinates[prop].y, interp: true}; 
@@ -461,9 +493,13 @@ function update_image() {
     $('#image').attr('src',sprintf( img_path, [current_image] )); 
     var new_text = sprintf('You are currently on frame %d / %d', current_image+1, nimages);
     $('#info-text').text( new_text ); // update the text at the top
+    $('#copy_bttn').prop('disabled',true);
+    $('#flow_bttn').prop('disabled',true);
     if (show_annotation && annotation.hasOwnProperty(current_image) && annotation[current_image].hasOwnProperty("data")){
             var annotate = annotation[current_image].data;
             draw_puppet(annotate);
+            $('#copy_bttn').prop('disabled',false);
+            $('#flow_bttn').prop('disabled',false);
     }    
 }
 
@@ -535,6 +571,14 @@ function stop_frames(){
     set_frame(0);
 }
 
+function delete_annotation(){
+    if (annotation.hasOwnProperty(current_image) && annotation[current_image].hasOwnProperty("data")){
+        delete(annotation[current_image])
+        update_image();
+    }else{
+        raise_error("No annotation on this frame to delete",5);
+    }
+}
 
 $('#fwd_bttn').click(function () {
     advance_frame(1);
@@ -566,6 +610,10 @@ $('#copy_bttn').click(function() {
     
 $('#flow_bttn').click(function() {
     copy_with_flow();
+}); 
+
+$('#del_bttn').click(function() {
+    delete_annotation();
 }); 
 
 $('#dnld_annotation').click(function() {
@@ -607,6 +655,11 @@ $(document).keydown(function(e){
                     download_annotation();
                 }
                 break;
+        case 88: //x
+                if (e.ctrlKey){
+                    delete_annotation();
+                }
+                break;
         case 80: if (play===undefined){  
                     $('#play_bttn').click();
                 }else {
@@ -618,7 +671,7 @@ $(document).keydown(function(e){
                     $('#stop_bttn').click();
                 }
                 break;
-        default: return;
+        default: console.log(e.which); return;
     }
     e.preventDefault();
 });
@@ -663,3 +716,15 @@ for (i=0; i<nimages; i++) {
 */        
 //txt_element = r.text(310, 20, "drag the points to change the curves").attr({fill: "#fff", "font-size": 16});
 //txt_element.toFront();
+
+/*
+function chkbox(){
+    var img_chk = document.getElementById("show_image_chkbox");
+    img_chk.checked ? show_image = true : show_image = false;
+    
+    var annotation_chk = document.getElementById("show_annotation_chkbox");
+    annotation_chk.checked ? show_annotation = true : show_annotation = false;
+   
+    update_image();
+}
+*/

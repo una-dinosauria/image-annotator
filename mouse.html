@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Image annotator</title>
+
+		<!-- Bootstrap -->
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
+		<!-- Optional theme -->
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css">
+	<body>
+		<header style="height:20px">
+		</header>
+		<center>
+
+			<div>
+                <h1> Hi hello</h1>
+				<p>Bored of looking at mouse, watch some human in action. <a href="human.html">[Click here]</a></p>
+			</div>
+
+			<div>
+				<p class="lead" id="info-text">xyx/ 100</p>
+			</div>
+			<!--<div id="container">-->
+
+				<!-- hidden canvas and image to conver images to matrices -->
+				<!--
+				<canvas id="hcanvas" width="640" height="400"></canvas>
+				<canvas id="hcanvas2" width="640" height="400"></canvas> -->
+
+				<div id="holder"></div>
+
+
+			<div class="btn-group" role="group" aria-label="...">
+				<button id="back_bttn" type="button" class="btn btn-default">
+					<span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+				</button>
+				<button id="play_bttn" type="button" class="btn btn-default">
+					<span class="glyphicon glyphicon-play" aria-hidden="true"></span>
+				</button>
+				<button id="pause_bttn" type="button" class="btn btn-default" style="display:none">
+					<span class="glyphicon glyphicon-pause" aria-hidden="true"></span>
+				</button>
+				<button id="stop_bttn" type="button" class="btn btn-default">
+					<span class="glyphicon glyphicon-stop" aria-hidden="true"></span>
+				</button>
+				<button id="fwd_bttn" type="button" class="btn btn-default">
+					<span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+				</button>
+
+                <!-- Generate a random annotation
+                    TODO: find a better button and place it a proper location-->
+                <button id="gen_random_bttn" type="button" class="btn btn-default">
+                Generate random puppet
+                </button>
+                <button id="copy_prev_bttn" type="button" class="btn btn-default">
+                Copy previous annotation
+                </button>
+                <button id="use_flow_bttn" type="button" class="btn btn-default">
+                Use flow to copy previous annotation
+                </button>
+                <button id="dnld_annotation" type="button" class="btn btn-default">
+                Download Annotation
+                </button>
+                <form action="">
+                    <input id="show_image_chkbox" type="checkbox" name="show_image" onchange="chkbox(this)" checked> show image
+                    <input id="show_annotation_chkbox" type="checkbox" name="show_annotation" onchange="chkbox(this)" checked>show annotation 
+                
+                    <input id="download_type" type="radio" name="download_fmt" value="csv" > CSV
+                    <input id="download_type" type="radio" name="download_fmt" value="json" checked> JSON
+                </form>
+                <form>
+                    Enter no of frame to copy/interpolate annotations
+                    <input id="copy_num" type="number" name="quantity" min="1" max="10">
+                </form>
+
+
+
+			</div>
+
+			<!--
+			<div id="holder"></div>
+			-->
+
+		</center>
+
+		<div>
+            <h3> Keyboard Shortcuts</h3>
+            <li>
+                <ul> left arrow key  - prev frame </ul>
+                <ul> right arrow key - Next frame </ul>
+                <ul> space     - Next frame </ul>
+                <ul> alt+space - Next frame </ul>
+                <ul> p      - Play/pause </ul>
+                <ul> ctrl+a - Stop </ul>
+                <ul> ctrl+f - Use optical flow to calculate annotations </ul>
+                <ul> ctrl+c - copy previous annotation </ul>
+                <ul> ctrl+r - Generate random annotation </ul>
+                <ul> ctrl+s - Download annotation </ul>
+            </li>
+        </div>
+        <!-- sprintf is super useful -->
+		<script src="js/sprintf.min.js"></script>
+		<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+		<!-- Include all compiled plugins (below), or include individual files as needed -->
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+
+		<!-- optical flow -->
+		<script src="js/oflow.js"></script>
+		<!-- raphael-js for svg on canvas -->
+		<script src="js/raphael-min.js"></script>
+        <!-- Here we put all the controls --> 
+		<!--script src="js/mouse.js"></script-->
+		<script src="js/main.js"></script>
+
+
+
+
+
+	</body>
+
+ </html>

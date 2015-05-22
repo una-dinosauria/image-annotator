@@ -10,97 +10,157 @@
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
 		<!-- Optional theme -->
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css">
+	
+	<style>
+		.center {
+    		text-align: center;
+    	}
+    	.left {
+    		text-align: left;
+    	}
+    	table, th, td {
+    		font-family: monospace;
+			font-size: 15px;
+			font-style: normal;
+			padding-left: 4px;
+			padding-top: 1px;
+			padding-right: 4px;
+			padding-bottom: 1px
+    	}
+    	h3 {
+    		font-family: monospace;
+    		font-size: 22px
+    	}
+    	form {
+    		font-size: 12px;
+    		font-family: monospace;
+    	}
+    	.overlay {
+    		background-color: #FFFFFF;
+       		z-index:100;
+       		position: relative;
+		}
+
+	</style>
+
 	<body>
-		<header style="height:20px">
-		</header>
-		<center>
+		<header style="height:20px"> </header>
+		
+	
+	<div style="float:left;width:20%; overflow:visible; white-space : nowrap; padding-left:5px">
 
-			<div>
-                <h1> Hi hello</h1>
-				<p>Bored of looking at mouse, watch some human in action. <a href="human.html">[Click here]</a></p>
+		 <h3> <a href="http://www.github.com/jltmtz/image-annotator"> [Github Project]</a> </h3>
+
+		<div id="form_area" >
+			<h3 style="color:#507EAF" > Options</h3>
+			<div id="form" class="overlay">
+				<form >
+	        		<b>Download format </b><br>
+    				<div style="padding-left:10px">
+        				<input id="download_type" type="radio" name="download_fmt" value="csv" > CSV <br>
+        				<input id="download_type" type="radio" name="download_fmt" value="json" checked> JSON
+        			</div>
+        		</form>
+        		<br>
+        		<form>
+            		<b>No of frame to copy annotations </b><br>
+            		<div style="padding-left:10px">
+            			<input id="copy_num" type="number" name="quantity" min="1" max="10" value="5">
+        			</div>
+        		</form>
 			</div>
-
-			<div>
-				<p class="lead" id="info-text">xyx/ 100</p>
-			</div>
-			<!--<div id="container">-->
-
-				<!-- hidden canvas and image to conver images to matrices -->
-				<!--
-				<canvas id="hcanvas" width="640" height="400"></canvas>
-				<canvas id="hcanvas2" width="640" height="400"></canvas> -->
-
-				<div id="holder"></div>
+		</div>
 
 
-			<div class="btn-group" role="group" aria-label="...">
-				<button id="back_bttn" type="button" class="btn btn-default">
-					<span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
-				</button>
-				<button id="play_bttn" type="button" class="btn btn-default">
-					<span class="glyphicon glyphicon-play" aria-hidden="true"></span>
-				</button>
-				<button id="pause_bttn" type="button" class="btn btn-default" style="display:none">
-					<span class="glyphicon glyphicon-pause" aria-hidden="true"></span>
-				</button>
-				<button id="stop_bttn" type="button" class="btn btn-default">
-					<span class="glyphicon glyphicon-stop" aria-hidden="true"></span>
-				</button>
-				<button id="fwd_bttn" type="button" class="btn btn-default">
-					<span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
-				</button>
+		<div id="shortcut_area" style="overflow:visible ;">
+	        <h3 style="color:#507EAF"> Keyboard Shortcuts</h3>
+	        <table id="shortcut">
+	        	<tr> 	<td> -&gt; </td> 		<td> prev frame </td> </tr>
+	            <tr>	<td> &lt;- </td>		<td> Next frame </td></tr>
+	            <tr>	<td> space </td>		<td> Next frame </td></tr>
+	            <tr>	<td> ctrl+space </td>	<td> Next frame </td></tr>
+	            <tr>	<td> p     </td>		<td> Play/pause </td></tr>
+	            <tr>	<td> ctrl+a </td>		<td> Stop </td></tr>
+	            <tr>	<td> ctrl+f </td>		<td> Use optical flow to calculate annotations </td></tr>
+	            <tr>	<td> ctrl+c </td>		<td> copy previous annotation </td></tr>
+	            <tr>	<td> ctrl+r </td>		<td> Generate random annotation </td></tr>
+	            <tr>	<td> ctrl+s </td>		<td> Download annotation </td></tr>
+	            <tr>	<td> ctrl+x </td>		<td> Delete annotation </td></tr>
+	        </table>
+	    </div>
 
-                <!-- Generate a random annotation
-                    TODO: find a better button and place it a proper location-->
-                <button id="gen_random_bttn" type="button" class="btn btn-default">
-                Generate random puppet
-                </button>
-                <button id="copy_prev_bttn" type="button" class="btn btn-default">
-                Copy previous annotation
-                </button>
-                <button id="use_flow_bttn" type="button" class="btn btn-default">
-                Use flow to copy previous annotation
-                </button>
-                <button id="dnld_annotation" type="button" class="btn btn-default">
-                Download Annotation
-                </button>
-                <form action="">
-                    <input id="show_image_chkbox" type="checkbox" name="show_image" onchange="chkbox(this)" checked> show image
-                    <input id="show_annotation_chkbox" type="checkbox" name="show_annotation" onchange="chkbox(this)" checked>show annotation 
-                
-                    <input id="download_type" type="radio" name="download_fmt" value="csv" > CSV
-                    <input id="download_type" type="radio" name="download_fmt" value="json" checked> JSON
-                </form>
-                <form>
-                    Enter no of frame to copy/interpolate annotations
-                    <input id="copy_num" type="number" name="quantity" min="1" max="10">
-                </form>
+	   
+	</div>
 
+	<div style="width:80%; float:right">
+		<div class="center">
+			<h3 id="info-text">xyx/ 100</h3>
+		</div>
+			
+		<div class="center" style="position: absolute; width: 80%;"> 
+			<img id="image" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);margin: 0 auto;"
+				x="0" y="0" width="640" height="480" src="" onload="image_loaded();">
+		</div>
 
+		<div class="center" id="holder" style="overflow: hidden; position: relative; left: -0.5px;">
+		</div>
+			
+		<div class="center" style="position:relative;" class="btn-group" role="group" aria-label="..." container: 'body'>
+			<button id="back_bttn" type="button" class="btn btn-default" 
+				data-toggle="tooltip" data-placement="left" data-original-title="Go one frame back">
+				<span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+			</button>
+		
+			<button id="play_bttn" type="button" class="btn btn-default"
+				data-toggle="tooltip" data-placement="bottom" data-original-title="play">
+				<span class="glyphicon glyphicon-play" aria-hidden="true"></span>
+			</button>
+		
+			<button id="pause_bttn" type="button" class="btn btn-default" style="display:none"
+				data-toggle="tooltip" data-placement="bottom" data-original-title="pause">
+				<span class="glyphicon glyphicon-pause" aria-hidden="true"></span>
+			</button>
+		
+			<button id="stop_bttn" type="button" class="btn btn-default"
+				data-toggle="tooltip" data-placement="bottom" data-original-title="stop">
+				<span class="glyphicon glyphicon-stop" aria-hidden="true"></span>
+			</button>
+		
+			<button id="fwd_bttn" type="button" class="btn btn-default"
+				data-toggle="tooltip" data-placement="bottom" data-original-title="Go one frame forward">
+				<span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+			</button>
 
-			</div>
+		    <button id="random_bttn" type="button" class="btn btn-primary"
+            	data-toggle="tooltip" data-placement="bottom" data-original-title="Generate Random Annotations">
+            	<span class="glyphicon glyphicon-random" aria-hidden="true"></span>
+            </button>
+            
+            <button id="copy_bttn" type="button" class="btn btn-primary"
+            	data-toggle="tooltip" data-placement="bottom" data-original-title="Copy annotation to next frame">
+            	<span class="glyphicon glyphicon-transfer"> </span> copy 
+            </button>
+            
+            <button id="flow_bttn" type="button" class="btn btn-primary"
+            	data-toggle="tooltip" data-placement="bottom" data-original-title="Copy annotation using optical flow">
+            	<span class="glyphicon glyphicon-transfer"></span> flow
+			</button>
 
-			<!--
-			<div id="holder"></div>
-			-->
-
-		</center>
-
-		<div>
-            <h3> Keyboard Shortcuts</h3>
-            <li>
-                <ul> left arrow key  - prev frame </ul>
-                <ul> right arrow key - Next frame </ul>
-                <ul> space     - Next frame </ul>
-                <ul> alt+space - Next frame </ul>
-                <ul> p      - Play/pause </ul>
-                <ul> ctrl+a - Stop </ul>
-                <ul> ctrl+f - Use optical flow to calculate annotations </ul>
-                <ul> ctrl+c - copy previous annotation </ul>
-                <ul> ctrl+r - Generate random annotation </ul>
-                <ul> ctrl+s - Download annotation </ul>
-            </li>
+			<button id="del_bttn" type="button" class="btn btn-danger"
+            	data-toggle="tooltip" data-placement="bottom" data-original-title="Remove annotation">
+            	<span class="glyphicon glyphicon-remove"></span>
+			</button>
+            
+            <button id="dnld_annotation" type="button" class="btn btn-success"
+            	data-toggle="tooltip" data-placement="right" data-original-title="Download annotations">
+            	<span class="glyphicon glyphicon-save" aria-hidden="true"></span>
+            </button>
         </div>
+    </div>
+    <footer style="height:30px"> </footer>
+        
+    
+
         <!-- sprintf is super useful -->
 		<script src="js/sprintf.min.js"></script>
 		<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
@@ -114,12 +174,19 @@
 		<script src="js/raphael-min.js"></script>
         <!-- Here we put all the controls --> 
 		<!--script src="js/mouse.js"></script-->
-		<script src="js/main.js"></script>
+		<script src="js/human.js"></script>
 
+		<!-- TODO : Wait for 2 sec before showing the tooltip-->
+		<script>
+			$(document).ready(function(){
+    			$('[data-toggle="tooltip"]').tooltip(); 
+				$("#form").hide();
+				$("#form_area").hover(function(){$("#form").show(500);}, function(){$("#form").hide(500);});
+				$("#shortcut").hide();
+				$("#shortcut_area").hover(function(){$("#shortcut").show(500);}, function(){$("#shortcut").hide();})
+			});
+			
 
-
-
-
+		</script>
 	</body>
-
  </html>
