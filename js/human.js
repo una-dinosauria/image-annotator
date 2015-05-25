@@ -247,7 +247,7 @@ function draw_puppet(keypoints, color) {
             annotation[look_back].hasOwnProperty("data")) {
 
         }else{
-            look_back--;
+            look_back++;
         }      
 
       //  console.log(look_back);
