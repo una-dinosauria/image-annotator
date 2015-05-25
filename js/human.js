@@ -236,7 +236,7 @@ function draw_puppet(keypoints, color) {
 
         var look_back = current_image-2;
         while (look_back > -1 &&
-                    annotation.hasOwnProperty(look_ahead) &&
+                    annotation.hasOwnProperty(look_back) &&
                     annotation[look_back].hasOwnProperty("data") &&
                     annotation[look_back].data[prop].interp===true){
             look_back--;
