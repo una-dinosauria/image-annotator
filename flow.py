@@ -75,7 +75,7 @@ if __name__ == '__main__':
 			rgb[:,:,1] = flow[:,:,1];
 
 			rgb = rgb.astype( np.uint8 );
-
+# data is saved as bgr whereas we actually wrote as rgb (cv2 stuff). Taken care in js code. Note that it is too much coupled. In case of any changes take care.				
 			im  = cv2.imwrite( dpath + directory + files[i], rgb);
 
 			# plt.imshow( rgb )
