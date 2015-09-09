@@ -175,6 +175,104 @@ function draw_puppet(keypoints, color) {
     center_control.mouseup(function(){
         center_control.update(0,0);                     //set all interp to false
         this.attr (center_control_attr["default"]);  
+        
+        var prop_array = [];
+        for (var i=0;i<control_points.length;i++){ 
+            prop_array[i] = control_points[i];
+        }
+
+        //look ahead till interp==false or end -- linearly intepolate
+        var look_ahead = current_image+2;
+        while ( look_ahead < nimages && 
+                annotation.hasOwnProperty(look_ahead) && 
+                annotation[look_ahead].hasOwnProperty("data")){
+            var inc_look_ahead = true;
+            for (var i=0;i<prop_array.length;i++){
+                var prop = prop_array[i];
+                if (annotation[look_ahead].data[prop].interp===false ){
+                    inc_look_ahead = false;
+                }
+            }
+            if (inc_look_ahead===true){    
+                look_ahead++;
+            }
+        }    
+        
+        if (look_ahead < nimages && 
+                annotation.hasOwnProperty(look_ahead) &&
+                annotation[look_ahead].hasOwnProperty("data") ){
+            //console.log("cont");        
+        }else{
+                look_ahead--;
+        }
+            //interpolate...
+          //  console.log(look_ahead);
+        if (annotation.hasOwnProperty(look_ahead) && annotation[look_ahead].hasOwnProperty("data")){
+          //  console.log("forward interpolation");
+            for (var i=0;i<prop_array.length;i++){
+                var prop = prop_array[i];
+                var x_inc = annotation[look_ahead].data[prop].x - annotation[current_image].data[prop].x ;
+                var y_inc = annotation[look_ahead].data[prop].y - annotation[current_image].data[prop].y ;
+            
+                x_inc = x_inc/(look_ahead-current_image);
+                y_inc = y_inc/(look_ahead-current_image);
+                var x_init = annotation[current_image].data[prop].x;
+                var y_init = annotation[current_image].data[prop].y;
+
+                for (var p = current_image; p < look_ahead; p++){
+                    annotation[p].data[prop].x = x_init + x_inc*(p-current_image);
+                    annotation[p].data[prop].y = y_init + y_inc*(p-current_image);
+                }
+            }
+        }
+
+
+        var look_back = current_image-2;
+        while (look_back > -1 &&
+                annotation.hasOwnProperty(look_back) &&
+                annotation[look_back].hasOwnProperty("data")){ 
+
+            var dec_look_back = true;
+            for (var i=0;i<prop_array.length;i++){
+                var prop = prop_array[i];
+                if (annotation[look_back].data[prop].interp===false){
+                    dec_look_back = false;
+                }
+            }
+            if (dec_look_back===true){
+                look_back--;
+            }
+        }
+
+        if (look_back > -1 && 
+            annotation.hasOwnProperty(look_back) &&
+            annotation[look_back].hasOwnProperty("data")) {
+
+        }else{
+            look_back++;
+        }      
+
+      //  console.log(look_back);
+        if ( annotation.hasOwnProperty(look_back) && annotation[look_back].hasOwnProperty("data")){ 
+                  //interpolate...
+            //      console.log("backward interpolation")
+            for (var i=0;i<prop_array.length;i++){
+                var prop= prop_array[i];
+                var x_inc = annotation[look_back].data[prop].x - annotation[current_image].data[prop].x ;
+                var y_inc = annotation[look_back].data[prop].y - annotation[current_image].data[prop].y ;
+
+                x_inc = x_inc/(look_back-current_image);
+                y_inc = y_inc/(look_back-current_image);
+                var x_init = annotation[current_image].data[prop].x;
+                var y_init = annotation[current_image].data[prop].y;
+
+                for (var p = current_image ; p > look_back; p--){
+                    annotation[p].data[prop].x = x_init + x_inc*(p-current_image);
+                    annotation[p].data[prop].y = y_init + y_inc*(p-current_image);
+                }
+            }   
+        }
+        
     });
 
     center_control.mouseout(function(){
@@ -388,7 +486,10 @@ function flow_prediction(predict_from,callback){
             var data  = annotation[predict_from].data
             for (var prop in data){
                 l = (data[prop].y*w + data[prop].x)*4;
-                new_data[prop] = {x:data[prop].x+p[l+1]-128,y:data[prop].y+p[l+2]-128};
+                //new_data[prop] = {x:data[prop].x+p[l+1]-128,y:data[prop].y+p[l+2]-128};
+                // taking care of opencv's bgr format. r is x and g is y
+                new_data[prop] = {x:data[prop].x+p[l+2]-128,y:data[prop].y+p[l+1]-128};
+
             }
             callback(new_data,predict_from+1);
         }

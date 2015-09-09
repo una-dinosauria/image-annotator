@@ -62,12 +62,7 @@
         			</div>
         		</form>
         		<br>
-        		<form>
-            		<b>No of frame to copy annotations </b><br>
-            		<div style="padding-left:10px">
-            			<input id="copy_num" type="number" name="quantity" min="1" max="10" value="5">
-        			</div>
-        		</form>
+        		
 			</div>
 		</div>
 
@@ -155,6 +150,11 @@
             	data-toggle="tooltip" data-placement="right" data-original-title="Download annotations">
             	<span class="glyphicon glyphicon-save" aria-hidden="true"></span>
             </button>
+            <br>
+            <form>
+            		<b>No of frame to copy annotations </b> <input id="copy_num" type="number" name="quantity" min="1" max="10" value="5">
+        			
+        	</form>
         </div>
     </div>
     <footer style="height:30px"> </footer>
@@ -180,10 +180,10 @@
 		<script>
 			$(document).ready(function(){
     			$('[data-toggle="tooltip"]').tooltip(); 
-				$("#form").hide();
-				$("#form_area").hover(function(){$("#form").show(500);}, function(){$("#form").hide(500);});
-				$("#shortcut").hide();
-				$("#shortcut_area").hover(function(){$("#shortcut").show(500);}, function(){$("#shortcut").hide();})
+				// $("#form").hide();
+				// $("#form_area").hover(function(){$("#form").show(500);}, function(){$("#form").hide(500);});
+				// $("#shortcut").hide();
+				// $("#shortcut_area").hover(function(){$("#shortcut").show(500);}, function(){$("#shortcut").hide();})
 			});
 			
 
