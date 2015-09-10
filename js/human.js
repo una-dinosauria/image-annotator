@@ -1,6 +1,7 @@
 /* 
 *   Global Variables
 *  All the variables the user need to set should be on the top
+*  TODO: see if you can write an interpolation function and use it everywhere
 */
 var img_path        = 'imgs/ixmas_daniel_cam1/img%04d.jpg';
 var flow_path       = 'flow/ixmas_daniel_cam1/img%04d.jpg';
@@ -673,7 +674,74 @@ function stop_frames(){
 }
 
 function delete_annotation(){
-    if (annotation.hasOwnProperty(current_image) && annotation[current_image].hasOwnProperty("data")){
+    // its kind of a soft delete which deletes only when its a border frame else tries to undo the changes made by user. 
+    // if intermediate frame 
+    if (annotation.hasOwnProperty(current_image) && annotation[current_image].hasOwnProperty("data") 
+        && annotation.hasOwnProperty(current_image-1) && annotation[current_image-1].hasOwnProperty("data")
+        && annotation.hasOwnProperty(current_image+1) && annotation[current_image+1].hasOwnProperty("data")){
+        
+       // console.log("interpolation");  
+
+        for (var i=0;i<control_points.length;i++){ 
+            var prop =  control_points[i];
+        
+
+            //look ahead till interp==false or end -- linearly intepolate
+            var look_ahead = current_image+1;
+            while ( look_ahead < nimages && 
+                    annotation.hasOwnProperty(look_ahead) && 
+                    annotation[look_ahead].hasOwnProperty("data") &&
+                    annotation[look_ahead].data[prop].interp===true){
+                look_ahead++;
+            }    
+            
+            if (look_ahead < nimages && 
+                    annotation.hasOwnProperty(look_ahead) &&
+                    annotation[look_ahead].hasOwnProperty("data") ){
+                //console.log("cont");        
+            }else{
+                    look_ahead--;
+            }
+            
+            //now we look back 
+            var look_back = current_image-1;
+            while (look_back > -1 &&
+                    annotation.hasOwnProperty(look_back) &&
+                    annotation[look_back].hasOwnProperty("data") &&
+                    annotation[look_back].data[prop].interp===true){
+                look_back--;
+            }
+            
+            if (look_back > -1 && 
+                annotation.hasOwnProperty(look_back) &&
+                annotation[look_back].hasOwnProperty("data")) {
+
+            }else{
+                look_back++;
+            }
+
+            //interpolate between look_ahead and look_back 
+            if (annotation.hasOwnProperty(look_ahead) && annotation[look_ahead].hasOwnProperty("data")
+                && annotation.hasOwnProperty(look_back) && annotation[look_back].hasOwnProperty("data")){
+                    
+                    var x_inc = annotation[look_ahead].data[prop].x - annotation[look_back].data[prop].x ;
+                    var y_inc = annotation[look_ahead].data[prop].y - annotation[look_back].data[prop].y ;
+                
+                    x_inc = x_inc/(look_ahead-look_back);
+                    y_inc = y_inc/(look_ahead-look_back);
+                    var x_init = annotation[look_back].data[prop].x;
+                    var y_init = annotation[look_back].data[prop].y;
+
+                    for (var p = look_back+1; p < look_ahead; p++){
+                        annotation[p].data[prop].x = x_init + x_inc*(p-look_back);
+                        annotation[p].data[prop].y = y_init + y_inc*(p-look_back);
+                    }
+                    annotation[current_image].data[prop].interp = true;
+            }
+               
+        }
+        update_image();  
+    }else if (annotation.hasOwnProperty(current_image) && annotation[current_image].hasOwnProperty("data")){
         delete(annotation[current_image])
         update_image();
     }else{
