@@ -176,42 +176,31 @@ function draw_puppet(keypoints, color) {
     center_control.mouseup(function(){
         center_control.update(0,0);                     //set all interp to false
         this.attr (center_control_attr["default"]);  
+       // console.log("center_control mouse uped");
         
-        var prop_array = [];
-        for (var i=0;i<control_points.length;i++){ 
-            prop_array[i] = control_points[i];
-        }
-
-        //look ahead till interp==false or end -- linearly intepolate
-        var look_ahead = current_image+2;
-        while ( look_ahead < nimages && 
-                annotation.hasOwnProperty(look_ahead) && 
-                annotation[look_ahead].hasOwnProperty("data")){
-            var inc_look_ahead = true;
-            for (var i=0;i<prop_array.length;i++){
-                var prop = prop_array[i];
-                if (annotation[look_ahead].data[prop].interp===false ){
-                    inc_look_ahead = false;
-                }
-            }
-            if (inc_look_ahead===true){    
-                look_ahead++;
-            }
-        }    
         
-        if (look_ahead < nimages && 
-                annotation.hasOwnProperty(look_ahead) &&
-                annotation[look_ahead].hasOwnProperty("data") ){
-            //console.log("cont");        
-        }else{
-                look_ahead--;
-        }
-            //interpolate...
-          //  console.log(look_ahead);
-        if (annotation.hasOwnProperty(look_ahead) && annotation[look_ahead].hasOwnProperty("data")){
-          //  console.log("forward interpolation");
-            for (var i=0;i<prop_array.length;i++){
-                var prop = prop_array[i];
+        for (prop in keypoints){
+          //  console.log(prop);
+            //look ahead till interp==false or end -- linearly intepolate
+            var look_ahead = current_image+2;
+            while ( look_ahead < nimages && 
+                    annotation.hasOwnProperty(look_ahead) && 
+                    annotation[look_ahead].hasOwnProperty("data") &&
+                    annotation[look_ahead].data[prop].interp===true){
+            
+                    look_ahead++;
+            }
+               
+        
+            if (look_ahead < nimages && 
+                    annotation.hasOwnProperty(look_ahead) &&
+                    annotation[look_ahead].hasOwnProperty("data") ){
+                //console.log("cont");        
+            }else{
+                    look_ahead--;
+            }
+            
+            if (annotation.hasOwnProperty(look_ahead) && annotation[look_ahead].hasOwnProperty("data")){
                 var x_inc = annotation[look_ahead].data[prop].x - annotation[current_image].data[prop].x ;
                 var y_inc = annotation[look_ahead].data[prop].y - annotation[current_image].data[prop].y ;
             
@@ -225,40 +214,27 @@ function draw_puppet(keypoints, color) {
                     annotation[p].data[prop].y = y_init + y_inc*(p-current_image);
                 }
             }
-        }
+            //console.log("forward interpolation done");
 
+            var look_back = current_image-2;
+            while (look_back > -1 &&
+                    annotation.hasOwnProperty(look_back) &&
+                    annotation[look_back].hasOwnProperty("data") &&
+                    annotation[look_back].data[prop].interp===true){ 
 
-        var look_back = current_image-2;
-        while (look_back > -1 &&
-                annotation.hasOwnProperty(look_back) &&
-                annotation[look_back].hasOwnProperty("data")){ 
-
-            var dec_look_back = true;
-            for (var i=0;i<prop_array.length;i++){
-                var prop = prop_array[i];
-                if (annotation[look_back].data[prop].interp===false){
-                    dec_look_back = false;
-                }
-            }
-            if (dec_look_back===true){
                 look_back--;
             }
-        }
+        
 
-        if (look_back > -1 && 
-            annotation.hasOwnProperty(look_back) &&
-            annotation[look_back].hasOwnProperty("data")) {
+            if (look_back > -1 && 
+                annotation.hasOwnProperty(look_back) &&
+                annotation[look_back].hasOwnProperty("data")) {
 
-        }else{
-            look_back++;
-        }      
+            }else{
+                look_back++;
+            }      
 
-      //  console.log(look_back);
-        if ( annotation.hasOwnProperty(look_back) && annotation[look_back].hasOwnProperty("data")){ 
-                  //interpolate...
-            //      console.log("backward interpolation")
-            for (var i=0;i<prop_array.length;i++){
-                var prop= prop_array[i];
+            if ( annotation.hasOwnProperty(look_back) && annotation[look_back].hasOwnProperty("data")){ 
                 var x_inc = annotation[look_back].data[prop].x - annotation[current_image].data[prop].x ;
                 var y_inc = annotation[look_back].data[prop].y - annotation[current_image].data[prop].y ;
 
@@ -271,7 +247,8 @@ function draw_puppet(keypoints, color) {
                     annotation[p].data[prop].x = x_init + x_inc*(p-current_image);
                     annotation[p].data[prop].y = y_init + y_inc*(p-current_image);
                 }
-            }   
+            }
+            //console.log("backward interpolation done");   
         }
         
     });
@@ -366,6 +343,8 @@ function draw_puppet(keypoints, color) {
                 annotation[p].data[prop].y = y_init + y_inc*(p-current_image);
             }
         }
+
+
     });
     
     controls.mouseout(function(){
